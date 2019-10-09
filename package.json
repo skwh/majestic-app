@@ -1,0 +1,19 @@
+{
+  "name": "majestic-app",
+  "version": "0.0.1",
+  "description": "Web application for Dr. Brian Majestic of the University of Denver Chemistry Department.",
+  "main": "main.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/skwh/majestic-app.git"
+  },
+  "author": "Evan Derby <somekidwithhtml@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/skwh/majestic-app/issues"
+  },
+  "homepage": "https://github.com/skwh/majestic-app#readme"
+}
