@@ -41,7 +41,7 @@ module.exports = env => {
       contentBase: './dist',
       hot: true,
       compress: true,
-      overlay: { warnings: true, errors: true },
+      overlay: { warnings: false, errors: true },
 
     },
     node: {
