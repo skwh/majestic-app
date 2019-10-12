@@ -25,9 +25,5 @@ export default {
   p {
     font-size: 1.25em;
   }
-  canvas {
-    width: 75%;
-    display: block;
-  }
 }
 </style>

@@ -9,7 +9,7 @@ export default {
         datasets: [{
           label: 'My First Dataset',
           backgroundColor: 'rgb(0, 0, 0, 0)',
-          borderColor: 'rgb(255, 99, 132)',
+          borderColor: 'rgb(99, 99, 132)',
           data: [
             0,
             20,
@@ -22,35 +22,27 @@ export default {
         }],
       },
       options: {
-        responsive: true,
-				title: {
-					display: true,
-					text: 'Chart.js Line Chart'
-				},
-				tooltips: {
-					mode: 'index',
-					intersect: false,
-				},
-				hover: {
-					mode: 'nearest',
-					intersect: true
-				},
-				scales: {
-					xAxes: [{
-						display: true,
-						scaleLabel: {
-							display: true,
-							labelString: 'Month'
-						}
-					}],
-					yAxes: [{
-						display: true,
-						scaleLabel: {
-							display: true,
-							labelString: 'Value'
-						}
-					}]
-				}
+        responsive: false,
+        title: {
+        display: true,
+        text: 'Chart.js Line Chart'
+        },
+        scales: {
+        xAxes: [{
+          display: true,
+          scaleLabel: {
+          display: true,
+          labelString: 'Month'
+          }
+        }],
+        yAxes: [{
+          display: true,
+          scaleLabel: {
+          display: true,
+          labelString: 'Value'
+          }
+        }]
+        }
       }
   }),
   mounted() {
