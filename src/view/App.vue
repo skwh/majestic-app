@@ -1,19 +1,13 @@
 <template>
   <div id="app">
-    <h1>Hello world!</h1>
-    <p>Welcome to my node app! I am really excited because it all works now! Maybe it'll be faster now!</p>
-    <chart :chartdata="this.chartdata"></chart>
+    <router-view />
   </div>
 </template>
 
 <script>
-import Chart from './components/Chart.vue';
 
 export default {
-  name: 'app',
-  components: {
-    Chart
-  }
+  name: 'app'
 }
 </script>
 

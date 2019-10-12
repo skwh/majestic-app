@@ -11,6 +11,7 @@ module.exports = env => {
     entry: {
       view: './src/view/main.js'
     },
+    devtool: 'cheap-module-eval-source-map',
     module: {
       rules: [
         {
