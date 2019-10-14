@@ -1,56 +1,15 @@
 <script>
 import { Line, mixins } from 'vue-chartjs';
-// import axios from 'axios';
 const { reactiveData } = mixins
+import Worker from '../workers/getUpdates.worker.js';
+import { FixedLengthDoublyLinkedList } from '../util/fll.js';
+import 'chartjs-plugin-streaming';
 
-const OPTIONS = {
-  responsive: false,
-  scales: {
-    xAxes: [{
-      display: true,
-      scaleLabel: {
-        display: true,
-        labelString: 'Time'
-      }
-    }],
-    yAxes: [{
-      display: true,
-      scaleLabel: {
-        display: true,
-        labelString: 'ug/m^3'
-      }
-    }]
-  }
-}
+const LIST_MAX_LENGTH = 7;
 
-const SENSOR_ALL_PATH = '/api/sensor/all';
-
-const getAllSensorData = function() {
-  return [
-    {
-      'sensorId': 'CM1',
-      'PM2_5': 6.9,
-      'Time': '6:02:03'
-    },
-    {
-      'sensorId': 'CM1',
-      'PM2_5': 6.7,
-      'Time': '6:04:03'
-    },
-    {
-      'sensorId': 'CM1',
-      'PM2_5': 8.72,
-      'Time': '6:07:03'
-    },
-  ];
-  // axios.get(SENSOR_ALL_PATH).then(response => {
-  //   console.log(response);
-  //   dataRef = response.data.data;
-  // })
-};
-
-const extractDataValues = function( messages, value ) {
-  return messages.map((obj) => obj[value]);
+const extractDataValues = function( messages, sensorName, value ) {
+  if (messages === undefined || sensorName === undefined || value === undefined) return []; 
+  return messages.toArray().filter((obj) => obj['sensorId'] === sensorName).map((obj) => obj[value]);
 }
 
 export default {
@@ -68,30 +27,85 @@ export default {
   mixins: [ reactiveData ],
   data() {
     return {
-      latest: [],
-      lastUpdated: -1
+      sensors: {},
+      options: {
+        responsive: false,
+        scales: {
+          xAxes: [{
+            type: 'realtime',
+            realtime: {
+              duration: 600000,
+              refresh: 1000,
+              delay: 2000,
+              onRefresh: this.onRefresh
+            }
+          }],
+          yAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'ug/m^3'
+            }
+          }]
+        },
+        tooltips: {
+          mode: 'nearest',
+          intersect: false
+        },
+        hover: {
+          mode: 'nearest',
+          intersect: false
+        }
+      }
     }
   },
   methods: {
-    makeChartDataObject ( latestData ) {
-      this.chartdata = {
-        labels: extractDataValues( latestData, 'Time' ),
-        datasets: [{
-          label: this.sensor,
-          backgroundColor: 'rgb(0, 0, 0, 0)',
-          borderColor: 'rgb(99, 99, 132)',
-          data: extractDataValues( latestData, this.sensor )
-        }],
+    makeChartDataObject () {
+      this.chartData = {
+        datasets: []
       }
     },
-    fetchChartData () {
-      this.latest = getAllSensorData();
-    }
+    setupWorker () {
+      this.worker = new Worker();
+      this.worker.onmessage = ( e ) => {
+        if (!this.sensors[e.data.sensorId]) {
+          this.addDataset( e.data.sensorId );
+        }
+        this.sensors[e.data.sensorId] = e.data;
+      }
+    },
+    addDataset ( label ) {
+      this.sensors[label] = { 'alive': true };
+      this.chartData.datasets.push({
+        label: label,
+        borderColor: 'rgb(54, 162, 235)',
+        fill: false,
+        data: []
+      });
+    },
+    onRefresh ( chart ) {
+      for (const dataset of this.chartData.datasets) {
+        let data = this.sensors[dataset.label];
+        let time = data['Time'];
+        let value = data['PM2_5'];
+        dataset.data.push({
+          x: parseInt(time, 10),
+          y: value
+        });
+      }
+    }    
   },
   mounted() {
-    this.fetchChartData();
-    this.makeChartDataObject( this.latest );
-    this.renderChart(this.chartdata, OPTIONS)
+    if (this.liveupdate) {
+      this.setupWorker();
+      this.worker.postMessage('startup');
+    }
+    this.makeChartDataObject();
+    this.renderChart(this.chartData, this.options);
+  },
+  watch: {
+    chartData() {
+      this.$data._chart.update();
+    }
   }
 }
 </script>
