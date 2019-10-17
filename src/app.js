@@ -1,4 +1,6 @@
+require('dotenv').config()
 const express = require('express');
+const db = require('./db');
 const app = express();
 const port = 4000;
 
@@ -15,8 +17,15 @@ app.put('/api/sensor/update', (req, res) => {
   console.log("Got a put request to /api/sensor/update !");
 });
 
-app.get('/api/sensor/all', (req, res) => {
-  console.log("Got a get request to /api/sensor/all !")
+app.get('/api/sensor/all', (req, res, next) => {
+  db.query('SELECT NOW() as now', [], (err, result) => {
+    if (err) {
+      console.log(err.stack);
+      next();
+    } else {
+      res.json({ now: result.rows[0] })
+    }
+  });
 });
 
 app.use((req, res, next) => {
