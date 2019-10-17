@@ -7,7 +7,7 @@
   "scripts": {
     "test": "echo 'Error: no test specified' && exit 1",
     "serve": "npm run build && node dist/app.js",
-    "build": "webpack --env.production=true && cp ./src/*.js ./dist/",
+    "build": "webpack --env.production=true && cp ./src/*.js ./dist/ && cp .web.env ./dist/",
     "dev": "webpack-dev-server --env.production=false"
   },
   "repository": {

@@ -47,15 +47,17 @@ This repository contains a `Dockerfile`, which allows the application to be run 
 
 ### Environment Variables
 
-Successful deployment of the application requires a `.env` file which holds environment variables about the postgres database. Half of these variables are for initializing the database itself, and the other half are required for the application to connect to that database. See the "Environment Variables" section of the [postgres docker image](https://hub.docker.com/_/postgres) and the "Connecting" section of the [node-postgres documentation](https://node-postgres.com/features/connecting) for more details. For this requirement, the following environment variables are required:
+Successful deployment of the application requires a pair of `.env` filse which hold environment variables about the postgres database. The first of these env files should be called `.db.env` and specifies parameters for the postgres database. The second of these env files should be called `.web.env` and is for the web portion of the app and gives information on how to connect to the running postgres image. 
 
-#### Postgres Image Variables:
+See the "Environment Variables" section of the [postgres docker image](https://hub.docker.com/_/postgres) and the "Connecting" section of the [node-postgres documentation](https://node-postgres.com/features/connecting) for more details. For these files, the following environment variables are required:
+
+#### Postgres Image Variables (`.db.env`):
 - POSTGRES_PASSWORD
 - POSTGRES_USER
 - POSTGRES_DB
 - PGDATA
 
-#### Node-Postgres module variables:
+#### Node-Postgres module variables (`.web.env`):
 - PGHOST
 - PGUSER
 - PGDATABASE
