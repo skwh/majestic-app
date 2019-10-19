@@ -1,15 +1,15 @@
 <script>
 import { Line, mixins } from 'vue-chartjs';
+import Axios from "axios";
 const { reactiveData } = mixins
-import Worker from '../workers/getUpdates.worker.js';
-import { FixedLengthDoublyLinkedList } from '../util/fll.js';
 import 'chartjs-plugin-streaming';
 
-const LIST_MAX_LENGTH = 7;
+const randMax = (max) => {
+  return Math.floor(Math.random() * max) + 1;
+}
 
-const extractDataValues = function( messages, sensorName, value ) {
-  if (messages === undefined || sensorName === undefined || value === undefined) return []; 
-  return messages.toArray().filter((obj) => obj['sensorId'] === sensorName).map((obj) => obj[value]);
+const randomColor = () => {
+  return `rgb(${randMax(255)}, ${randMax(255)}, ${randMax(255)})`;
 }
 
 export default {
@@ -34,8 +34,8 @@ export default {
           xAxes: [{
             type: 'realtime',
             realtime: {
-              duration: 600000,
-              refresh: 1000,
+              duration: 60000,
+              refresh: 10000,
               delay: 2000,
               onRefresh: this.onRefresh
             }
@@ -46,16 +46,15 @@ export default {
               labelString: 'ug/m^3'
             }
           }]
-        },
-        tooltips: {
-          mode: 'nearest',
-          intersect: false
-        },
-        hover: {
-          mode: 'nearest',
-          intersect: false
         }
-      }
+      },
+      animation: {
+        duration: 0
+      },
+      hover: {
+          animationDuration: 0
+      },
+      responsiveAnimationDuration: 0
     }
   },
   methods: {
@@ -64,41 +63,45 @@ export default {
         datasets: []
       }
     },
-    setupWorker () {
-      this.worker = new Worker();
-      this.worker.onmessage = ( e ) => {
-        if (!this.sensors[e.data.sensorId]) {
-          this.addDataset( e.data.sensorId );
+    parseResponse( response ) {
+      let data = response.data.data;
+      data.forEach((val) => {
+        let sensorId = val['sensorId'];
+        if (!this.sensors[sensorId]) {
+          this.addDataset(sensorId);
         }
-        this.sensors[e.data.sensorId] = e.data;
-      }
+        this.sensors[sensorId] = val;
+      });
     },
     addDataset ( label ) {
-      this.sensors[label] = { 'alive': true };
+      this.sensors[label] = true;
       this.chartData.datasets.push({
         label: label,
-        borderColor: 'rgb(54, 162, 235)',
+        borderColor: randomColor(),
         fill: false,
         data: []
       });
     },
     onRefresh ( chart ) {
-      for (const dataset of this.chartData.datasets) {
-        let data = this.sensors[dataset.label];
-        let time = data['Time'];
-        let value = data['PM2_5'];
-        dataset.data.push({
-          x: parseInt(time, 10),
-          y: value
-        });
-      }
+      Axios.get('/api/sensor/all').then(response => {
+        this.parseResponse(response);
+        for (const dataset of chart.data.datasets) {
+          let data = this.sensors[dataset.label];
+          let time = data['Time'];
+          let value = data['PM2_5'];
+          dataset.data.push({
+            x: time,
+            y: value
+          });
+          chart.update();
+        }
+        console.log("updated chart with new data from endpoint");
+      }).catch((err) => {
+        console.error(err);
+      });
     }    
   },
   mounted() {
-    if (this.liveupdate) {
-      this.setupWorker();
-      this.worker.postMessage('startup');
-    }
     this.makeChartDataObject();
     this.renderChart(this.chartData, this.options);
   },

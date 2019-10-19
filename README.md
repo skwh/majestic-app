@@ -27,6 +27,7 @@ This code handles interactions with the Postgres database.
 Clone this repository to your local machine and install dependencies through `npm`:
 
 > `git clone <path to repo>`
+
 > `npm install`
 
 ## Development Mode
@@ -48,6 +49,8 @@ This repository contains a `Dockerfile`, which allows the application to be run 
 ### Environment Variables
 
 Successful deployment of the application requires a pair of `.env` filse which hold environment variables about the postgres database. The first of these env files should be called `.db.env` and specifies parameters for the postgres database. The second of these env files should be called `.web.env` and is for the web portion of the app and gives information on how to connect to the running postgres image. 
+
+This separation is necessary because Docker Compose will abstract the postgres container behind a service. Therefore the web application needs different information to connect to that service than the actual postgres container will use to set itself up.
 
 See the "Environment Variables" section of the [postgres docker image](https://hub.docker.com/_/postgres) and the "Connecting" section of the [node-postgres documentation](https://node-postgres.com/features/connecting) for more details. For these files, the following environment variables are required:
 
