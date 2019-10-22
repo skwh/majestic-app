@@ -1,5 +1,6 @@
 version: "3.7"
 services:
   web:
+    image: derbyevan/majestic-app_web:latest
     ports:
       - "80:4000"

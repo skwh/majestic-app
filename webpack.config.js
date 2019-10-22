@@ -4,7 +4,17 @@ const VueLoaderPlugin = require('vue-loader/lib/plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
+const strToBool = (str) => {
+  if (str === 'true')
+    return true;
+  return false;
+}
+
 module.exports = env => {
+  if (env.production) {
+    env.production = strToBool(env.production);
+  }
+  console.log(env);
   return {
     mode: env.production ?
           'production' : 'development',
@@ -74,6 +84,10 @@ module.exports = env => {
       ]
     },
     plugins: [
+      new webpack.DefinePlugin({
+        PRODUCTION: JSON.stringify(env.production),
+        'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
+      }),
       new webpack.HotModuleReplacementPlugin(),
       new webpack.NamedModulesPlugin(),
       new webpack.NoEmitOnErrorsPlugin(),

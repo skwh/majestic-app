@@ -1,8 +1,9 @@
 <script>
 import { Line, mixins } from 'vue-chartjs';
-import Axios from "axios";
 const { reactiveData } = mixins
+import Axios from "axios";
 import 'chartjs-plugin-streaming';
+import ApiRoutes from '../api';
 
 const randMax = (max) => {
   return Math.floor(Math.random() * max) + 1;
@@ -16,8 +17,7 @@ export default {
   extends: Line,
   props: {
     liveupdate: Boolean,
-    start: Number,
-    end: Number,
+    duration: Number,
     sensor: {
       validator: function (value) {
         return ['PM1_0', 'PM2_5', 'PM10'].indexOf(value) !== -1;
@@ -34,9 +34,9 @@ export default {
           xAxes: [{
             type: 'realtime',
             realtime: {
-              duration: 60000,
-              refresh: 10000,
-              delay: 2000,
+              duration: this.duration || process.env.CHART_DEFAULT_TIME_SPAN,
+              refresh: process.env.CHART_DEFAULT_REFRESH_RATE,
+              delay: process.env.CHART_DEFAULT_DELAY,
               onRefresh: this.onRefresh
             }
           }],
@@ -48,13 +48,13 @@ export default {
           }]
         }
       },
-      animation: {
-        duration: 0
-      },
-      hover: {
-          animationDuration: 0
-      },
-      responsiveAnimationDuration: 0
+      // animation: {
+      //   duration: 0
+      // },
+      // hover: {
+      //     animationDuration: 0
+      // },
+      // responsiveAnimationDuration: 0
     }
   },
   methods: {
@@ -83,7 +83,7 @@ export default {
       });
     },
     onRefresh ( chart ) {
-      Axios.get('/api/sensor/all').then(response => {
+      Axios.get(ApiRoutes.REALTIME_ENDPOINT).then(response => {
         this.parseResponse(response);
         for (const dataset of chart.data.datasets) {
           let data = this.sensors[dataset.label];
@@ -95,7 +95,6 @@ export default {
           });
           chart.update();
         }
-        console.log("updated chart with new data from endpoint");
       }).catch((err) => {
         console.error(err);
       });

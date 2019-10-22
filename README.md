@@ -67,3 +67,6 @@ See the "Environment Variables" section of the [postgres docker image](https://h
 - PGPASSWORD
 - PGPORT
 
+## Database Configuration
+
+The database holds up to 6 months' worth of data from any sensors that have been connected to the application

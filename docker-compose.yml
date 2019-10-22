@@ -2,11 +2,11 @@ version: "3.7"
 services:
   web:
     build: .
-    env_file: .web.env
+    env_file: ./config/.web.env
     depends_on:
         - db
   db:
     image: postgres:alpine
-    env_file: .db.env
+    env_file: ./config/.db.env
     ports:
       - "7654"

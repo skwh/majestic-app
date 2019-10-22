@@ -1,15 +1,17 @@
 require('dotenv').config({ path: __dirname + '/.web.env'})
 const express = require('express');
 const db = require('./db');
+const cors = require('cors');
 const app = express();
-const port = 4000;
 
 const logger = (req, res, next) => {
   console.log(`-> ${req.protocol} - ${req.method} - ${req.originalUrl}`);
   next();
 }
 
-app.use(logger);
+if (!PRODUCTION) {
+  app.use(logger);
+}
 
 app.use(express.static(__dirname + '/view'));
 
@@ -24,7 +26,7 @@ app.use(express.static(__dirname + '/view'));
  * }
  * Response: 200 OK if success
  */
-app.put('/api/sensor/update', (req, res) => {
+app.put('/api/sensor/update', cors(), (req, res) => {
   console.log("Got a put request to /api/sensor/update !");
 });
 
@@ -40,7 +42,7 @@ app.put('/api/sensor/update', (req, res) => {
  *  }, ...
  * ]
  */
-app.get('/api/sensor/all', (req, res, next) => {
+app.get('/api/sensor/all', cors(), (req, res, next) => {
   // == MOCK DATA ==
   let mock_data = [1,2,3].map((i) => {
     return {
@@ -69,4 +71,4 @@ app.use((err, req, res, next) => {
   res.status(500).send('500 Internal Server Error');
 });
 
-app.listen(port, () => console.log("server online."));
+app.listen(process.env.SERVE_PORT, () => console.log("server online."));
