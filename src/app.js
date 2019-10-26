@@ -9,10 +9,6 @@ const logger = (req, res, next) => {
   next();
 }
 
-if (!PRODUCTION) {
-  app.use(logger);
-}
-
 app.use(express.static(__dirname + '/view'));
 
 /**
