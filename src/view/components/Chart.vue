@@ -5,6 +5,10 @@ import Axios from "axios";
 import 'chartjs-plugin-streaming';
 import ApiRoutes from '../api';
 
+const CHART_DEFAULT_TIME_SPAN = 3600000;
+const CHART_DEFAULT_REFRESH_RATE = 60000;
+const CHART_DEFAULT_DELAY = 30000;
+
 const randMax = (max) => {
   return Math.floor(Math.random() * max) + 1;
 }
@@ -18,6 +22,8 @@ export default {
   props: {
     liveupdate: Boolean,
     duration: Number,
+    refresh: Number,
+    delay: Number,
     sensor: {
       validator: function (value) {
         return ['PM1_0', 'PM2_5', 'PM10'].indexOf(value) !== -1;
@@ -34,9 +40,9 @@ export default {
           xAxes: [{
             type: 'realtime',
             realtime: {
-              duration: this.duration || process.env.CHART_DEFAULT_TIME_SPAN,
-              refresh: process.env.CHART_DEFAULT_REFRESH_RATE,
-              delay: process.env.CHART_DEFAULT_DELAY,
+              duration: this.duration || CHART_DEFAULT_TIME_SPAN,
+              refresh: this.refresh || CHART_DEFAULT_REFRESH_RATE,
+              delay: this.delay || CHART_DEFAULT_DELAY,
               onRefresh: this.onRefresh
             }
           }],

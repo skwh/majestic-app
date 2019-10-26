@@ -1,23 +1,40 @@
 <template>
   <div id="app">
-    <router-view />
+    <header>
+      <app-navigation></app-navigation>
+    </header>
+    <main>
+      <router-view />
+    </main>
+    <app-footer></app-footer>
   </div>
 </template>
 
 <script>
+import AppNavigation from './components/Navigation.vue';
+import AppFooter from './components/Footer.vue';
 
 export default {
-  name: 'app'
+  name: 'app',
+  components: {
+    AppNavigation,
+    AppFooter
+  }
 }
 </script>
 
 <style lang="scss">
-#app {
-  h1 {
-    text-transform: uppercase;
-  }
-  p {
-    font-size: 1.25em;
-  }
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+div#app {
+  font-family: sans-serif;
+}
+
+main {
+  margin: auto;
+  width: 75%;
 }
 </style>
