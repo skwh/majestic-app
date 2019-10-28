@@ -8,7 +8,8 @@
     "test": "mocha-webpack --webpack-config webpack.config.js --require test/setup.js test/**/*.spec.js",
     "serve": "npm run build && node dist/app.js",
     "build": "webpack --env.production=true && cp -v ./src/*.js ./dist/ && cp -v ./config/.web.env ./dist/",
-    "dev": "webpack-dev-server --env.production=false"
+    "dev": "webpack-dev-server --env.production=false",
+    "test:watch": "mocha-webpack --watch --webpack-config webpack.config.js --require test/setup.js test/**/*.spec.js"
   },
   "repository": {
     "type": "git",
@@ -46,6 +47,7 @@
     "jsdom-global": "^3.0.2",
     "mocha": "^5.0.0",
     "mocha-webpack": "^2.0.0-beta.0",
+    "moment-locales-webpack-plugin": "^1.1.0",
     "node-sass": "^4.12.0",
     "null-loader": "^3.0.0",
     "sass": "^1.23.0",

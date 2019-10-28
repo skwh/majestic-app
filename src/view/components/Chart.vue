@@ -9,13 +9,8 @@ const CHART_DEFAULT_TIME_SPAN = 3600000;
 const CHART_DEFAULT_REFRESH_RATE = 60000;
 const CHART_DEFAULT_DELAY = 30000;
 
-const randMax = (max) => {
-  return Math.floor(Math.random() * max) + 1;
-}
-
-const randomColor = () => {
-  return `rgb(${randMax(255)}, ${randMax(255)}, ${randMax(255)})`;
-}
+const randMax = (max) => Math.floor(Math.random() * max) + 1;
+const randomColor = () => `rgb(${randMax(255)}, ${randMax(255)}, ${randMax(255)})`;
 
 export default {
   extends: Line,
@@ -54,13 +49,13 @@ export default {
           }]
         }
       },
-      // animation: {
-      //   duration: 0
-      // },
-      // hover: {
-      //     animationDuration: 0
-      // },
-      // responsiveAnimationDuration: 0
+      animation: {
+        duration: 0
+      },
+      hover: {
+          animationDuration: 0
+      },
+      responsiveAnimationDuration: 0
     }
   },
   methods: {
@@ -69,7 +64,7 @@ export default {
         datasets: []
       }
     },
-    parseResponse( response ) {
+    parseRealtimeResponse( response ) {
       let data = response.data.data;
       data.forEach((val) => {
         let sensorId = val['sensorId'];
@@ -78,6 +73,18 @@ export default {
         }
         this.sensors[sensorId] = val;
       });
+    },
+    parseRecentResponse( response ) {
+      let dataset = response.data.data;
+      dataset.forEach((items) => {
+        items.forEach((val) => {
+          let sensorId = val['sensorId'];
+          if (!this.sensors[sensorId]) {
+            this.addDataset(sensorId);
+          }
+          this.sensors[sensorId] = val;
+        })
+      })
     },
     addDataset ( label ) {
       this.sensors[label] = true;
@@ -90,7 +97,7 @@ export default {
     },
     onRefresh ( chart ) {
       Axios.get(ApiRoutes.REALTIME_ENDPOINT).then(response => {
-        this.parseResponse(response);
+        this.parseRealtimeResponse(response);
         for (const dataset of chart.data.datasets) {
           let data = this.sensors[dataset.label];
           let time = data['Time'];
@@ -105,15 +112,28 @@ export default {
         console.error(err);
       });
     },
-    onLoad() {
-      Axios.get(ApiRoutes.REALTIME_ENDPOINT).then(response => {
-
-      })
+    getRecentData() {
+      Axios.get(ApiRoutes.RECENT_ENDPOINT).then(response => {
+        this.parseRecentResponse(response);
+        let sensor_list = Object.keys(this.sensors);
+        sensor_list.forEach((sensor) => {
+          let sensor_data = response.data.data.map((i) => i.filter((v) => v.sensorId === sensor)).reverse();
+          let dataset = this.$data._chart.data.datasets.find((v) => v.label === sensor);
+          sensor_data.forEach((datum) => {
+            dataset.data.push({
+              x: parseInt(datum[0]['Time'], 10),
+              y: datum[0]['PM2_5']
+            });
+            this.$data._chart.update();
+          });
+        });
+      });
     }    
   },
   mounted() {
     this.makeChartDataObject();
     this.renderChart(this.chartData, this.options);
+    this.getRecentData();
   },
   watch: {
     chartData() {

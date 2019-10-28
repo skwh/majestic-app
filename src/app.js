@@ -3,16 +3,17 @@ const express = require('express');
 const db = require('./db');
 const cors = require('cors');
 const app = express();
+const moment = require('moment');
 
 const Logger = (req, res, next) => {
   console.log(`${req.ip} -> ${req.protocol} - ${req.method} - ${req.originalUrl}`);
   next();
 }
 
-const mockData = (i) => {
+const mockData = (i, time) => {
   return {
     sensorId: `CM${i}`,
-    Time: Date.now(),
+    Time: time,
     PM2_5: Math.pow(Math.random(i) * 10, Math.random(i) * 2)
   }
 }
@@ -55,7 +56,7 @@ app.put('/api/sensor/update', cors(), (req, res) => {
  */
 app.get('/api/sensor/all', cors(), (req, res, next) => {
   // == MOCK DATA ==
-  let mock_data = range(3).map((i) => mockData(i));
+  let mock_data = range(1,4).map((i) => mockData(i, moment().format('x')));
   res.json({ data: mock_data });
   // db.query('SELECT NOW() as now', (err, result) => {
   //   if (err) {
@@ -66,6 +67,13 @@ app.get('/api/sensor/all', cors(), (req, res, next) => {
   //   }
   // });
 });
+
+app.get('/api/sensor/recent', cors(), (req, res, next) => {
+  // == MOCK DATA ==
+  let MakeMockData = (time) => range(1,4).map((i) => mockData(i, time));
+  let mock_data = range(1,61).map((i) => MakeMockData(moment().subtract(i, 'minutes').format('x')));
+  res.json({ data: mock_data });
+})
 
 app.get('/api/sensor/:id', cors(), (req, res, next) => {
   console.log("Got a get request to /api/sensor/" + req.params.id);

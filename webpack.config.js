@@ -3,6 +3,7 @@ const webpack = require('webpack');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const MomentLocalesPlugin = require('moment-locales-webpack-plugin');
 
 const strToBool = (str) => {
   if (str === 'true')
@@ -97,6 +98,7 @@ module.exports = env => {
       new webpack.NoEmitOnErrorsPlugin(),
       new webpack.ProgressPlugin(),
       new VueLoaderPlugin(),
+      new MomentLocalesPlugin(),
       new HtmlWebpackPlugin({
         title: 'majestic-app',
         filename: 'index.html',
