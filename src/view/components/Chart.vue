@@ -104,6 +104,11 @@ export default {
       }).catch((err) => {
         console.error(err);
       });
+    },
+    onLoad() {
+      Axios.get(ApiRoutes.REALTIME_ENDPOINT).then(response => {
+
+      })
     }    
   },
   mounted() {

@@ -11,8 +11,10 @@ const strToBool = (str) => {
 }
 
 module.exports = env => {
-  if (env.production) {
+  if (env !== undefined && env.production) {
     env.production = strToBool(env.production);
+  } else {
+    env = { production: true }
   }
   console.log(env);
   return {
@@ -22,6 +24,12 @@ module.exports = env => {
       view: './src/view/main.js'
     },
     devtool: 'cheap-module-eval-source-map',
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, 'src/')
+      },
+      extensions: ['.js', '.vue']
+    },
     module: {
       rules: [
         {
@@ -44,10 +52,6 @@ module.exports = env => {
               }
             }
           ]
-        },
-        {
-          test: /\.worker\.js$/,
-          use: { loader: 'worker-loader' }
         },
         {
           test: /\.js$/,
