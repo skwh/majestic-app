@@ -6,7 +6,11 @@ services:
     depends_on:
         - db
   db:
-    image: postgres:alpine
+    build: ./db/ 
     env_file: ./config/.db.env
+    volumes:
+      - "dbdata:/var/lib/postgresql/data"
     ports:
       - "7654"
+volumes:
+  dbdata:

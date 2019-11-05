@@ -7,8 +7,9 @@
   "scripts": {
     "test": "mocha-webpack --webpack-config webpack.config.js --require test/setup.js test/**/*.spec.js",
     "serve": "npm run build && node dist/app.js",
-    "build": "webpack --env.production=true && cp -v ./src/*.js ./dist/ && cp -v ./config/.web.env ./dist/",
-    "dev": "webpack-dev-server --env.production=false",
+    "build": "./build/build.sh",
+    "vue-dev": "webpack-dev-server --env.production=false",
+    "node-dev": "nodemon src/app.js",
     "test:watch": "mocha-webpack --watch --webpack-config webpack.config.js --require test/setup.js test/**/*.spec.js"
   },
   "repository": {
@@ -49,6 +50,7 @@
     "mocha-webpack": "^2.0.0-beta.0",
     "moment-locales-webpack-plugin": "^1.1.0",
     "node-sass": "^4.12.0",
+    "nodemon": "^1.19.4",
     "null-loader": "^3.0.0",
     "sass": "^1.23.0",
     "sass-loader": "^8.0.0",

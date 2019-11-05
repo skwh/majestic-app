@@ -1,6 +1,7 @@
-require('dotenv').config({ path: __dirname + '/.web.env'})
+require('dotenv').config({ path: __dirname + '/config/.web.env'})
 const express = require('express');
 const db = require('./db');
+const api = require('./state');
 const cors = require('cors');
 const app = express();
 const moment = require('moment');
@@ -20,6 +21,9 @@ const mockData = (i, time) => {
 
 const range = (s, e) => Array.from('x'.repeat(e - s), (_, i) => s + i);
 
+if (process.env.SERVE_PORT === undefined) {
+  process.env.SERVE_PORT = 4000;
+}
 if (process.env.NODE_ENV === 'development') {
   app.use(Logger);
 }
@@ -68,17 +72,9 @@ app.get('/api/sensor/all', cors(), (req, res, next) => {
   // });
 });
 
-app.get('/api/sensor/recent', cors(), (req, res, next) => {
-  // == MOCK DATA ==
-  let MakeMockData = (time) => range(1,4).map((i) => mockData(i, time));
-  let mock_data = range(1,61).map((i) => MakeMockData(moment().subtract(i, 'minutes').format('x')));
-  res.json({ data: mock_data });
-})
+app.get('/api/sensor/recent', cors(), api.sensor.recent);
 
-app.get('/api/sensor/:id', cors(), (req, res, next) => {
-  console.log("Got a get request to /api/sensor/" + req.params.id);
-  next();
-});
+app.get('/api/sensor/:id', cors(), api.sensor.id);
 
 app.use((req, res, next) => {
   res.status(404).send('404 Not Found');

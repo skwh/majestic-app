@@ -3,3 +3,6 @@ services:
   web:
     ports:
       - "8000:4000"
+  db:
+    ports:
+      - "7654:7654"
