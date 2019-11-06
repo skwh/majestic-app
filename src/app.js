@@ -1,10 +1,13 @@
-require('dotenv').config({ path: __dirname + '/config/.web.env'})
+require('dotenv').config({ path: __dirname + '/config/.web.env'});
+
 const express = require('express');
 const db = require('./db');
 const api = require('./state');
 const cors = require('cors');
 const app = express();
 const moment = require('moment');
+
+let VIEW_PATH = '/view';
 
 const Logger = (req, res, next) => {
   console.log(`${req.ip} -> ${req.protocol} - ${req.method} - ${req.originalUrl}`);
@@ -21,14 +24,12 @@ const mockData = (i, time) => {
 
 const range = (s, e) => Array.from('x'.repeat(e - s), (_, i) => s + i);
 
-if (process.env.SERVE_PORT === undefined) {
-  process.env.SERVE_PORT = 4000;
-}
 if (process.env.NODE_ENV === 'development') {
-  app.use(Logger);
+  VIEW_PATH = './dist' + VIEW_PATH;
 }
 
-app.use(express.static(__dirname + '/view'));
+app.use(Logger);
+app.use(express.static(__dirname + VIEW_PATH));
 
 /**
  * PUT : API/SENSOR/UPDATE
@@ -41,13 +42,10 @@ app.use(express.static(__dirname + '/view'));
  * }
  * Response: 200 OK if success
  */
-app.put('/api/sensor/update', cors(), (req, res) => {
-  console.log("Got a put request to /api/sensor/update !");
-  res.status(200).json({ empty: 'empty' });
-});
+app.put('/api/sensor/update', cors(), api.sensor.update);
 
 /**
- * GET : API/SENSOR/ALL
+ * GET : API/SENSOR/ALL/LATEST
  * Returns the latest measurement from all sensors
  * Response format: json
  * data: [
@@ -58,7 +56,7 @@ app.put('/api/sensor/update', cors(), (req, res) => {
  *  }, ...
  * ]
  */
-app.get('/api/sensor/all', cors(), (req, res, next) => {
+app.get('/api/sensor/all/latest', cors(), (req, res, next) => {
   // == MOCK DATA ==
   let mock_data = range(1,4).map((i) => mockData(i, moment().format('x')));
   res.json({ data: mock_data });
@@ -85,4 +83,4 @@ app.use((err, req, res, next) => {
   res.status(500).send('500 Internal Server Error');
 });
 
-app.listen(process.env.SERVE_PORT, () => console.log("server online."));
+app.listen(process.env.SERVE_PORT || 4000, () => console.log("server online."));

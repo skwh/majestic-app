@@ -1,6 +1,14 @@
+# This file is automatically loaded when docker-compose is used without the -f flag.
+# It acts as a development configuration of the docker-compose environment.
+# When the app is deployed in production, this compose file is explicitly not used.
 version: "3.7"
 services:
   web:
+    command: npm run docker-node-dev
+    volumes:
+      - type: bind
+        source: ./src
+        target: /usr/src/app/src
     ports:
       - "8000:4000"
   db:

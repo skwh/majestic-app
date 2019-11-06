@@ -1,3 +1,4 @@
+# This file outlines basic settings when using docker-compose with this codebase.
 version: "3.7"
 services:
   web:

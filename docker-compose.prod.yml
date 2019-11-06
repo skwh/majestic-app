@@ -1,3 +1,4 @@
+# Load this file when using docker-compose in production via the -f flag.
 version: "3.7"
 services:
   web:
