@@ -14,22 +14,19 @@ const Logger = (req, res, next) => {
   next();
 }
 
-const mockData = (i, time) => {
-  return {
-    sensorId: `CM${i}`,
-    Time: time,
-    PM2_5: Math.pow(Math.random(i) * 10, Math.random(i) * 2)
-  }
-}
-
-const range = (s, e) => Array.from('x'.repeat(e - s), (_, i) => s + i);
-
 if (process.env.NODE_ENV === 'development') {
   VIEW_PATH = './dist' + VIEW_PATH;
 }
 
 app.use(Logger);
 app.use(express.static(__dirname + VIEW_PATH));
+
+let state = api.update();
+// Pass the state along with each request
+app.use((_, res, next) => {
+  res.locals.state = state;
+  next();
+});
 
 /**
  * PUT : API/SENSOR/UPDATE
@@ -42,7 +39,7 @@ app.use(express.static(__dirname + VIEW_PATH));
  * }
  * Response: 200 OK if success
  */
-app.put('/api/sensor/update', cors(), api.sensor.update);
+app.put('/api/sensor/update', cors(), express.json(), api.sensor.update);
 
 /**
  * GET : API/SENSOR/ALL/LATEST

@@ -21,9 +21,9 @@ const colors = [
   "#607D8B"  // Blue Gray 500
 ];
 
-const randomColor = () => colors[Math.floor(Math.random() * colors.length) + 1];
+const randomItem = (ary) => ary[Math.floor(Math.random() * ary.length)];
 
 module.exports = {
   colors: colors,
-  random: randomColor
+  random: randomItem
 }
