@@ -6,7 +6,7 @@ mkdir dist
 mkdir dist/config
 
 echo "Starting webpack....."
-webpack --env.production=true
+webpack --env.production=$1
 
 echo "Copying web server...."
 cp -v ./src/*.js ./dist/

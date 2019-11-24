@@ -1,16 +1,17 @@
 {
   "name": "majestic-app",
-  "version": "0.1.0",
+  "version": "0.5.0",
   "description": "Web application for Dr. Brian Majestic of the University of Denver Chemistry Department.",
   "private": true,
   "main": "app.js",
   "scripts": {
     "test": "mocha-webpack --webpack-config webpack.config.js --require test/setup.js test/**/*.spec.js",
-    "serve": "npm run build && node dist/app.js",
-    "build": "./build/build.sh",
+    "serve": "npm run build:prod && node dist/app.js",
+    "build:dev": "./build/build.sh false",
+    "build:prod": "./build/build.sh true",
     "vue-dev": "webpack-dev-server --env.production=false",
     "node-dev": "nodemon src/app.js",
-    "docker-node-dev": "npm run build && nodemon src/app.js",
+    "docker-node-dev": "npm run build:dev && nodemon src/app.js",
     "test:watch": "mocha-webpack --watch --webpack-config webpack.config.js --require test/setup.js test/**/*.spec.js"
   },
   "repository": {
