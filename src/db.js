@@ -1,5 +1,4 @@
 const { Pool } = require('pg');
-const utils = require('./utils');
 
 const pool = new Pool();
 
