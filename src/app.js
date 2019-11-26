@@ -3,10 +3,10 @@ const express = require('express');
 
 const db = require('./db');
 const utils = require('./utils');
-const colors = require('./color');
 
 const cors = require('cors');
 const moment = require('moment');
+const helmet = require('helmet');
 
 const app = express();
 
@@ -21,7 +21,7 @@ if (process.env.NODE_ENV === 'development') {
   VIEW_PATH = '../dist' + VIEW_PATH;
   console.log(VIEW_PATH);
 }
-
+app.use(helmet());
 app.use(Logger);
 app.use(express.static(__dirname + VIEW_PATH));
 
@@ -206,15 +206,17 @@ app.get('/api/sensor/fields', cors(), (req, res, next) => {
   } else {
     res.json({ fields : EXPECTED_UPDATE_FIELDS });
   }
-})
+});
 
 app.use((req, res, next) => {
   res.status(404).send('404 Not Found');
-})
+});
 
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).send('500 Internal Server Error');
 });
 
-app.listen(process.env.SERVE_PORT || 4000, () => console.log('Server online.'));
+let server = app.listen(process.env.SERVE_PORT || 4000, () => console.log('Server online.'));
+
+module.exports = server;
