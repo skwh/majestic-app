@@ -32,6 +32,7 @@ function values_as_array(obj, keys) {
 module.exports = {
   zip: zip,
   object_has_key: object_has_key,
+  iterate_on_keys: iterate_on_keys,
   filter_keys: filter_keys,
   contains: contains,
   values_as_array: values_as_array

@@ -1,9 +1,9 @@
 require('dotenv').config({ path: __dirname + '/config/.web.env'});
-const express = require('express');
 
 const db = require('./db');
 const utils = require('./utils');
 
+const express = require('express');
 const cors = require('cors');
 const moment = require('moment');
 const helmet = require('helmet');
