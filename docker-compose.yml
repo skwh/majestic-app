@@ -3,11 +3,13 @@ version: "3.7"
 services:
   web:
     build: .
+    image: derbyevan/majestic-app_web:latest
     env_file: ./config/.web.env
     depends_on:
         - db
   db:
     build: ./db/ 
+    image: derbyevan/majestic-app_db:latest
     env_file: ./config/.db.env
     volumes:
       - "dbdata:/var/lib/postgresql/data"
