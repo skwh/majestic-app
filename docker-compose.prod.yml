@@ -3,7 +3,17 @@ version: "3.7"
 services:
   web:
     image: derbyevan/majestic-app_web:latest
+    env_file: ./config/.web.env
+    depends_on:
+      - db
     ports:
       - "80:8000"
   db:
     image: derbyevan/majestic-app_db:latest
+    env_file: ./config/.db.env
+    volumes:
+      - "dbdata:/var/lib/postgresql/data"
+    ports:
+      - "7654"
+volumes:
+  dbdata:
