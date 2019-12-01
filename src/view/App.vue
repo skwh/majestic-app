@@ -1,8 +1,6 @@
 <template>
   <div id="app">
-    <header>
-      <app-navigation></app-navigation>
-    </header>
+    <app-navigation></app-navigation>
     <main>
       <router-view />
     </main>
@@ -30,11 +28,8 @@ html, body {
 }
 
 div#app {
-  font-family: sans-serif;
-}
-
-main {
+  font-family: "Roboto", "Open Sans", sans-serif;
+  width: 50vw;
   margin: auto;
-  width: 75%;
 }
 </style>

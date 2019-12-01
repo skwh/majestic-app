@@ -1,12 +1,20 @@
 <template>
-  <nav>
-    <div v-for="(page, i) in pages" v-bind:key="i">
-      <router-link v-bind:to="page.path">{{ page.name }}</router-link>
+  <header>
+    <div id="logo">
+      <a href="https://www.du.edu" title="University of Denver">
+        <img :src="this.logoUrl" alt="University of Denver Logo">
+      </a>
+      <h1>Denver Air Quality Monitoring</h1>
     </div>
-  </nav>  
+    <nav>
+      <router-link v-for="(page, i) in pages" v-bind:key="i" v-bind:to="page.path">{{ page.name }}</router-link>
+    </nav>
+  </header>
 </template>
 
 <script>
+import DuLogo from '../../public/du-logo.png';
+
 export default {
   name: 'AppNavigation',
   data() {
@@ -17,43 +25,56 @@ export default {
           path: '/'
         },
         {
-          name: 'Download',
+          name: 'Download Data',
           path: '/download'
         }
-      ]
+      ],
+      logoUrl: DuLogo,
     }
   }
 }
 </script>
 
 <style lang="scss">
-nav {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.5);
-  margin-bottom: 2%;
 
-  div {
+header {
+  text-align: center;
+  margin: 1vw;
+
+  img {
+    width: 50%;
+  }
+
+  h1 {
+    margin:1vh 0;
+  }
+}
+
+nav {
+  margin-bottom: 2%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  a {
     display: inline-block;
     padding: 2%;
-    
-    a {
+
+    text-decoration: none;
+    color: black;
+
+    &:visited {
       color: black;
-      text-decoration: none;
+    }
 
-      &:visited {
-        color: black;
-      }
-
-      &.router-link-active {
-        color: grey;
-      }
+    &.router-link-active {
+      font-weight: bold;
     }
 
     &:hover {
       cursor: pointer;
       background-color:rgba(0, 0, 0, 0.1);
-      a {
-        color: grey;
-      }
+      color: grey;
     }
   }
 }

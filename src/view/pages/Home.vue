@@ -1,18 +1,15 @@
 <template>
   <section>
-    <chart v-bind:sensor="'PM2_5'" v-bind:liveupdate="true"></chart>
-    <p>This is a test chart. The data displayed are random values and the dataset names do not correspond to real sensors.</p>
-    <p>The chart displays values up to an hour ago. Each minute, it checks for new data and displays the new data.</p>
-    <p>Let me know what you think!</p>
+    <control-chart></control-chart>
   </section>
 </template>
 
 <script>
-import Chart from '../components/Chart.vue';
+import ControlChart from '../components/ControlChart.vue';
 
 export default {
   name: 'Home',
-  components: { Chart }
+  components: { ControlChart }
 }
 </script>
 
