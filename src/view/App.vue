@@ -22,13 +22,15 @@ export default {
 </script>
 
 <style lang="scss">
+@import url('https://fonts.googleapis.com/css?family=Roboto+Condensed:700|Roboto:400,700&display=swap');
+
 html, body {
   margin: 0;
   padding: 0;
 }
 
 div#app {
-  font-family: "Roboto", "Open Sans", sans-serif;
+  font-family: "Roboto", sans-serif;
   width: 50vw;
   margin: auto;
 }

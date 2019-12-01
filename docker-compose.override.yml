@@ -10,7 +10,7 @@ services:
         source: ./src
         target: /usr/src/app/src
     ports:
-      - "8000:4000"
+      - "8000:8000"
   db:
     ports:
       - "7654:7654"

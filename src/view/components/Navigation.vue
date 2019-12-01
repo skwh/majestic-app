@@ -47,6 +47,7 @@ header {
 
   h1 {
     margin:1vh 0;
+    font-family: "Roboto Condensed", "Roboto", sans-serif;
   }
 }
 

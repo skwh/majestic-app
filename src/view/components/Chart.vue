@@ -83,14 +83,20 @@ export default {
         if (!this.hasSensorId(d)) {
           this.newSensorId(d)
         }
-        this.addDataPoint(d);
+        this.addDataPoint(d.canary_message);
       });
     },
     hasSensorId( datum ) {
-      return this.sensors[datum.sensorID] !== undefined;
+      return this.sensors[datum.canary_message.sensorID] !== undefined;
     },
     newSensorId( datum ) {
-      this.sensors[datum.sensorID] = datum.sensor_color;
+      this.sensors[datum.canary_message.sensorID] = datum.sensor_color;
+      this.chartData.datasets.push({
+        label : datum.canary_message.sensorID,
+        borderColor: datum.sensor_color,
+        backgroundColor: 'rgba(0, 0, 0, 0)',
+        data: []
+      });
     },
     parseRecentResponse( response ) {
       let data = response.data.data;
@@ -138,6 +144,7 @@ export default {
           this.chartData.datasets.push({
             label : d.sensor_id, 
             borderColor: d.sensor_color,
+            backgroundColor: 'rgba(0, 0, 0, 0)',
             data: []
           });
         });

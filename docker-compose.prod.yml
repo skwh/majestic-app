@@ -4,4 +4,6 @@ services:
   web:
     image: derbyevan/majestic-app_web:latest
     ports:
-      - "80:4000"
+      - "80:8000"
+  db:
+    image: derbyevan/majestic-app_db:latest

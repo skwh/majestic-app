@@ -181,12 +181,12 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
       request.fields.push('Time');
     }
     request.fields.push('sensorID');
-    let { QUERY, PARAMS } = (() => {
-      let all_sensors = utils.contains(request.sensorIds, '*');
-      let params = [request.startTime, request.endTime];
+    const { QUERY, PARAMS } = (() => {
+      const all_sensors = utils.contains(request.sensorIds, '*');
+      const params = [request.startTime, request.endTime];
       return {
         QUERY: all_sensors ? SENSOR_QUERY_ALL_SENSORS : SENSOR_QUERY_SOME_SENSORS,
-        PARAMS: all_sensors ? params : (params.concat(request.sensorIds))
+        PARAMS: all_sensors ? params : (params.concat([request.sensorIds])) // here ':' means 'OR' not 'cons'
       }
     })();
     db.query(QUERY, PARAMS, (error, result) => {
@@ -241,7 +241,7 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
     res.status(500).send('500 Internal Server Error');
   });
 
-  return app.listen(process.env.SERVE_PORT || 4000, () => console.log('Server online.'));
+  return app.listen(process.env.SERVE_PORT || 8000, () => console.log('Server online.'));
 }
 
 CreateApp(express, cors, moment, helmet, db, utils);
