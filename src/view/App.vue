@@ -22,7 +22,7 @@ export default {
 </script>
 
 <style lang="scss">
-@import url('https://fonts.googleapis.com/css?family=KRoboto+Condensed:700|Roboto:400,700&display=swap');
+@import url('https://fonts.googleapis.com/css?family=Roboto+Condensed:700|Roboto:400,700&display=swap');
 
 html, body {
   margin: 0;
