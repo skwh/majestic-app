@@ -106,7 +106,7 @@ module.exports = env => {
       new VueLoaderPlugin(),
       new MomentLocalesPlugin(),
       new HtmlWebpackPlugin({
-        title: 'majestic-app',
+        title: 'Denver Air Quality Monitoring',
         filename: 'index.html',
         template: './src/public/index.html',
         inject: true

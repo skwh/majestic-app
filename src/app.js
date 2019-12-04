@@ -7,6 +7,8 @@ const express = require('express');
 const cors = require('cors');
 const moment = require('moment');
 const helmet = require('helmet');
+const https = require('https');
+const http = require('http');
 
 /**
  * Encapsulating the app code in a function allows for 
@@ -30,8 +32,31 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
   app.use(Logger);
   app.use(express.static(__dirname + VIEW_PATH));
 
-  const EXPECTED_UPDATE_FIELD_UNITS = ['none', 'timestamp', 'coordinate', 'coordinate', 'none', 'flag', 'degrees farenheit', 'percent', 'flag', 'flag', 'µg/m3', 'µg/m3', 'µg/m3', 'µg/m3', 'µg/m3', 'µg/m3', 'signal'];
-  const EXPECTED_UPDATE_FIELDS = ['sensorID', 'Time', 'Lat', 'Long', 'Uncertainty', 'F1', 'Temp', 'Hmdty', 'F3', 'F4', 'PM1_0', 'PM2_5', 'PM10', 'PM1_02', 'PM2_52', 'PM102', 'sig'];
+  /**
+   * A message to API/SENSOR/UPDATE must have the fields in the first column of this array,
+   * with the second column corresponding to their units. Replaces separate arrays for each.
+   */
+  const EXPECTED_CANARY_MESSAGE_FORMAT = [
+    ['source_device', 'Identification Number'],
+    ['datetime', 'Datetime'],
+    ['time', 'time'],
+    ['Lat', 'coordinate'],
+    ['Long', 'coordinate'],
+    ['Uncertianity', 'none'],
+    ['F1', 'flag'],
+    ['F3', 'flag'],
+    ['F4', 'flag'],
+    ['Sig', 'significance'],
+    ['Hmdty', 'percent'],
+    ['Temp', 'degrees farenheit'],
+    ['PM1_0', 'µg/m3'],
+    ['PM2_5', 'µg/m3'],
+    ['PM10', 'µg/m3'],
+    ['PM1_02', 'µg/m3'],
+    ['PM2_52', 'µg/m3'],
+    ['PM102', 'µg/m3']
+  ];
+
   const EXPECTED_QUERY_FIELDS = ['sensorIds', 'startTime', 'endTime', 'fields', 'download'];
 
   const MALFORMED_PARAMETER = (res) => res.status(400).json({
@@ -52,7 +77,8 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
   }
 
   function validate_update_message(body) {
-    return validate_message(EXPECTED_UPDATE_FIELDS, body);
+    let { array1 } = utils.unzip(EXPECTED_CANARY_MESSAGE_FORMAT);
+    return validate_message(array1, body);
   }
 
   function validate_query_message(body) {
@@ -70,6 +96,7 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
 
   // parsing bool from string is probably the messiest thing i have ever seen
   function parse_boolean(str) {
+    if (str === undefined) return false;
     switch(str.toLowerCase()) {
       case 'true': case 't': case '1': return true;
       default: return false;
@@ -78,10 +105,14 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
 
   function convert_to_csv(values) {
     let val = "";
+    if (values.length < 1)
+      return "Zero rows returned";
     val += Object.keys(values[0]).join() + "\n";
     val += values.reduce((acc, v) => acc += utils.values_as_array(v, Object.keys(v)).join() + "\n", "");
     return val;
   }
+
+  const CANARY_MESSAGE_SENSOR_ID_FIELD_NAME = 'source_device';
 
   /**
    * PUT : API/SENSOR/UPDATE
@@ -102,7 +133,7 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
       MALFORMED_PARAMETER(res);
       return;
     }
-    let sensor_id = req.body['sensorID'];
+    let sensor_id = req.body[CANARY_MESSAGE_SENSOR_ID_FIELD_NAME];
     const query = `INSERT INTO canary_sensor_data(
                     input_timestamp, 
                     sensor_id, 
@@ -149,12 +180,12 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
   /**
    * GET : API/SENSOR
    * Returns data based on the passed parameters.
-   * Request headers required: Accept (text/csv, default: application/json)
    * Request format: query params
    * Request parameters: (all are required)
    *  - startTime (time: ISO 8601 or unix timestamp)
    *  - endTime (time)
    *  - download (boolean)
+   *  - format ('json' or 'csv', default 'json')
    *  - sensorIds (list of sensor ids, if '*' is supplied, all are included)
    *  - fields (list of fields to be included)
    * Response format: json OR csv
@@ -180,10 +211,10 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
     if (!utils.contains(request.fields, 'Time')) {
       request.fields.push('Time');
     }
-    request.fields.push('sensorID');
+    request.fields.push(CANARY_MESSAGE_SENSOR_ID_FIELD_NAME);
     const { QUERY, PARAMS } = (() => {
       const all_sensors = utils.contains(request.sensorIds, '*');
-      const params = [request.startTime, request.endTime];
+      const params = [moment(request.startTime).format(), moment(request.endTime).format()];
       return {
         QUERY: all_sensors ? SENSOR_QUERY_ALL_SENSORS : SENSOR_QUERY_SOME_SENSORS,
         PARAMS: all_sensors ? params : (params.concat([request.sensorIds])) // here ':' means 'OR' not 'cons'
@@ -194,13 +225,10 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
         next(error);
       } else {
         let rows = result.rows.map(v => { v.canary_message = utils.filter_keys(v['canary_message'], request.fields); return v; });
-        res.format({
-          'text/csv': () => res.send(convert_to_csv(rows)),
-          'default': () => res.json({
-            size: rows.length,
-            data: rows
-          }),
-        });
+        if (request.format === 'csv')
+          res.send(convert_to_csv(rows.map(v => v['canary_message'])));
+        else
+          res.json({ size: rows.length, data: rows });
       }
     })
   });
@@ -216,12 +244,21 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
    */
   app.get('/api/sensor/fields', cors(), (req, res, next) => {
     if (parse_boolean(req.query.units)) {
-      res.json({ fields: utils.zip(EXPECTED_UPDATE_FIELDS, EXPECTED_UPDATE_FIELD_UNITS) });
+      res.json({ data: EXPECTED_CANARY_MESSAGE_FORMAT });
     } else {
-      res.json({ fields : EXPECTED_UPDATE_FIELDS });
+      let {
+        array1
+      } = utils.unzip(EXPECTED_CANARY_MESSAGE_FORMAT);
+      res.json({ data : array1 });
     }
   });
 
+  /**
+   * GET : API/SENSOR/SENSORS
+   * Returns the sensors currently registered in the database.
+   * Parameters: none
+   * Response type: json
+   */
   app.get('/api/sensor/sensors', cors(), (req, res, next) => {
     db.query('SELECT sensor_id, sensor_color FROM canary_recent_data', (error, result) => {
       if (error) {
@@ -241,9 +278,26 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
     res.status(500).send('500 Internal Server Error');
   });
 
-  return app.listen(process.env.SERVE_PORT || 8000, () => console.log('Server online.'));
+  return app;
 }
 
-CreateApp(express, cors, moment, helmet, db, utils);
+const app = CreateApp(express, cors, moment, helmet, db, utils);
+
+const httpServer = http.createServer(app);
+httpServer.listen(process.env.SERVE_PORT || 8000, () => console.log('Server online.'));
+
+if (process.env.SERVE_HTTPS) {
+  const privateKey = 'false'; // Replace with fs readFileSync and cert location
+  const certificate = 'false';
+  
+  const HTTPS_CREDENTIALS = {
+    key: 'false',
+    cert: 'false'
+  };
+
+  const httpsServer = https.createServer(HTTPS_CREDENTIALS, app);
+  
+  httpsServer.listen(process.env.HTTPS_SERVE_PORT || 8443, () => console.log('HTTPS Server online.'));
+}
 
 module.exports = CreateApp;

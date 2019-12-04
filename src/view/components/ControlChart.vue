@@ -1,6 +1,6 @@
 <template>
   <div>
-    <chart :styles="this.styles"></chart>
+    <chart></chart>
   </div>
 </template>
 
@@ -25,7 +25,4 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-div {
-  --chart-height: 50vh;
-}
 </style>
