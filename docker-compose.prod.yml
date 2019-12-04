@@ -2,7 +2,7 @@
 version: "3.7"
 services:
   web:
-    image: derbyevan/majestic-app_web:latest
+    image: derbyevan/majestic-app_web:stable
     env_file: ./config/.web.env
     environment:
       - SERVE_HTTPS=1
@@ -13,7 +13,7 @@ services:
       - "80:8000"
       - "443:8443"
   db:
-    image: derbyevan/majestic-app_db:latest
+    image: derbyevan/majestic-app_db:stable
     env_file: ./config/.db.env
     restart: on-failure
     volumes:
