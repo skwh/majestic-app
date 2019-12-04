@@ -1,6 +1,6 @@
 # This file is automatically loaded when docker-compose is used without the -f flag.
-# It acts as a development configuration of the docker-compose environment.
-# When the app is deployed in production, this compose file is explicitly not used.
+# It acts as a development configuration for the docker-compose environment with this app.
+# When the app is deployed in production, this compose file should explicitly not be used.
 version: "3.7"
 services:
   web:
