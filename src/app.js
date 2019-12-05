@@ -172,7 +172,7 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
     ['endTime', 0],
     ['download', false],
     ['format', 'json'],
-    ['sensorIds', ''],
+    ['sensorIds', []],
     ['fields', [CANARY_MESSAGE_SENSOR_ID_FIELD_NAME, 'Time']]
   ];
 
@@ -230,7 +230,7 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
       request.fields.push('Time');
     }
     request.fields.push(CANARY_MESSAGE_SENSOR_ID_FIELD_NAME);
-    const all_sensors = utils.contains(request.sensorIds, '*');
+    const all_sensors = utils.contains(request.sensorIds, '*') || request.sensorIds.length === 0;
     const params = [moment(request.startTime).format(), moment(request.endTime).format()];
     return {
       QUERY: all_sensors ? ALL_SENSORS_QUERY : SOME_SENSORS_QUERY,
