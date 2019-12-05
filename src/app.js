@@ -22,7 +22,7 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
   const Logger = (req, res, next) => {
     console.log(`${req.ip} -> ${req.protocol} - ${req.method} - ${req.originalUrl}`);
     res.on('finish', () => {
-      console.log(`  <- ${res.statusCode} ${res.statusMessage}`);
+      console.log(`${req.ip} <- ${res.statusCode} ${res.statusMessage}`);
     })
     next();
   }
@@ -31,6 +31,7 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
     VIEW_PATH = '../dist' + VIEW_PATH;
     console.log(VIEW_PATH);
   }
+
   app.use(helmet());
   app.use(Logger);
   app.use(express.static(__dirname + VIEW_PATH));
@@ -80,7 +81,7 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
   }
 
   function validate_query_message(body) {
-    return utils.boolean_fold(['startTime', 'endTime'].map(utils.is_not_undefined)) ? 
+    return utils.boolean_fold(['startTime', 'endTime'].map(i => i !== undefined)) ? 
                                 validate_times(body['startTime'], body['endTime']) : true;
   }
 
@@ -185,7 +186,7 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
   ];
 
   function fill_default_values(obj, fieldsZip) {
-    fieldsZip.forEach(z => obj[z[0]] = utils.is_not_undefined(obj[z[0]]) ? obj[z[0]] : z[1]); 
+    fieldsZip.forEach(z => obj[z[0]] = obj[z[0]] === undefined ? obj[z[0]] : z[1]); 
     return obj;
   }
   /**
@@ -234,10 +235,6 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
 
   function handle_sensor_query(queryParams, ALL_SENSORS_QUERY, SOME_SENSORS_QUERY) {
     let request = fill_default_values(queryParams, DEFAULT_QUERY_REQUEST_PARAMETERS);
-    if (!utils.contains(request.fields, 'Time')) {
-      request.fields.push('Time');
-    }
-    request.fields.push(CANARY_MESSAGE_SENSOR_ID_FIELD_NAME);
     const all_sensors = utils.contains(request.sensorIds, '*') || request.sensorIds.length === 0;
     const params = [moment(request.startTime).format(), moment(request.endTime).format()];
     return {

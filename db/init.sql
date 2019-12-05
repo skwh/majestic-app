@@ -1,12 +1,12 @@
 CREATE TABLE canary_sensor_data (
   input_timestamp timestamp NOT NULL,
-  sensor_id varchar(20) NOT NULL,
+  sensor_id varchar(24) NOT NULL,
   canary_message JSONB NOT NULL
 );
 
 CREATE TABLE canary_recent_data (
   input_timestamp timestamp UNIQUE,
-  sensor_id varchar(20) PRIMARY KEY,
+  sensor_id varchar(24) PRIMARY KEY,
   canary_message JSONB NOT NULL,
   sensor_color char(7) NOT NULL
 );

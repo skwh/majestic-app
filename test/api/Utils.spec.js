@@ -7,6 +7,11 @@ describe('Utility functions', () => {
     it('should correctly zip two arrays');
   });
 
+  describe('unzip', () => {
+    it('should correctly unzip an array with nested subarrays');
+    it('should skip a subarray that is not of size 2');
+  });
+
   describe('object_has_key', () => {
     it('should correctly determine if an object has a given key');
   });

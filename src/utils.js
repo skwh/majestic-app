@@ -9,32 +9,15 @@ function zip(ary1, ary2) {
 function unzip(ary_of_2_n_arys) {
   let ary1 = [], ary2 = [];
   for (let i=0; i < ary_of_2_n_arys.length; i++) {
+    if (ary_of_2_n_arys[i].length != 2) continue;
     ary1.push(ary_of_2_n_arys[i][0]);
     ary2.push(ary_of_2_n_arys[i][1]);
   }
   return [ary1, ary2];
 }
 
-function ordering(a, b) {
-  if (a < b)
-    return 'LT';
-  if (a > b) {
-    return 'GT';
-  }
-  return 'EQ';
-}
-
 function object_has_key(obj, key) {
   return contains(Object.keys(obj), key);
-}
-
-function default_or_val(a, b) {
-  if (b) return b;
-  return a;
-}
-
-function is_not_undefined(a) {
-  return a != undefined;
 }
 
 function boolean_fold(boolArray) {
@@ -50,7 +33,7 @@ function filter_keys(obj, keep_keys) {
   let val = iterate_on_keys(obj, (o, k) => {
     if (!contains(keep_keys, k)) delete o[k];
   });
-  /* If keep keys has too many keys, then somehow we are trying to filter with the wrong instrument fields */
+  /* Debugging: If keep keys has too many keys, then somehow we are trying to filter with the wrong instrument fields */
   // switch (ordering(Object.keys(val).length, keep_keys.length)) {
   //   case ('LT'):
   //     console.warn('filter_keys: keep_keys had an extra key!');
@@ -76,8 +59,6 @@ module.exports = {
   zip: zip,
   unzip: unzip,
   boolean_fold: boolean_fold,
-  is_not_undefined: is_not_undefined,
-  default_or_val: default_or_val,
   object_has_key: object_has_key,
   iterate_on_keys: iterate_on_keys,
   filter_keys: filter_keys,

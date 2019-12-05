@@ -33,13 +33,23 @@ describe('majestic-app API', () => {
 
   describe('GET /api/sensor', () => {
     it('should reject a query without all the query parameters');
+    it('should reject a query with mixed up dates');
     it('should accept multiple sensor values');
     it('should accept multiple field values');
-    it('should reject a query with mixed up dates');
   });
+
+  describe('GET /api/sensor/count', () => {
+    it('should return empty for a query without all the query parameters');
+    it('should correctly match the number of rows based on the given parameters');
+  })
 
   describe('GET /api/sensor/fields', () => {
     it('should return a list of fields');
     it('should also return a list of units if requested');
   });
+
+  describe('GET /api/sensor/sensors', () => {
+    it('should return a list of sensor_ids and their colors');
+    it('should return empty if the database is empty');
+  })
 })
