@@ -23,7 +23,7 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
     console.log(`${req.ip} -> ${req.protocol} - ${req.method} - ${req.originalUrl}`);
     next();
   }
-
+  
   if (process.env.NODE_ENV === 'development') {
     VIEW_PATH = '../dist' + VIEW_PATH;
     console.log(VIEW_PATH);
@@ -42,7 +42,7 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
     ['Time', 'time'],
     ['Lat', 'coordinate'],
     ['Long', 'coordinate'],
-    ['Uncertianity', 'none'],
+    ['Uncertainty', 'none'],
     ['F1', 'flag'],
     ['F3', 'flag'],
     ['F4', 'flag'],
@@ -63,7 +63,12 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
   });
 
   function validate_message(expected_fields, message) {
-    return expected_fields.map(i => utils.object_has_key(message, i)).reduce((p, c) => p && c);
+    // return utils.boolean_fold(expected_fields.map(i => utils.object_has_key(message, i)));
+    return utils.boolean_fold(expected_fields.map(i => {
+      let val = utils.object_has_key(message, i);
+      if (!val) console.info("validate_message: message is missing expected field", i);
+      return val;
+    }))
   }
 
   function validate_update_message(body) {
@@ -300,6 +305,7 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
     console.error(err);
     res.status(500).send('500 Internal Server Error');
   });
+
 
   return app;
 }

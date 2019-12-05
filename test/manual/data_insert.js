@@ -37,12 +37,14 @@ let interval = setInterval(() => {
   // Increase the number of sensors over time, cap at NUM_SENSORS
   let interval_max = Math.floor((20 * i) / example_json.length) + 1;
   for (let j = 0; j < interval_max && j < NUM_SENSORS; j++) {
-    let req = http.request(prod_request_options, (res) => {
+    let req = http.request(request_options, (res) => {
       console.log(`Got ${res.statusCode} ${res.statusMessage} for sensor update Canary-S-DU${j+1}`);
     });
     let example_object = example_json[i];
-    example_object['sensorID'] = `Canary-S-DU${j+1}`
-    example_object['Time'] = moment().format();
+    let current_time = moment().format();
+    example_object['source_device'] = `Canary-S-DU${j+1}`
+    example_object['Time'] = current_time;
+    example_object['datetime'] = current_time;
     example_object['PM2_5'] = ((Math.random() + 1) * example_object['PM2_5']).toFixed(3);
     req.write(JSON.stringify(example_object));
     req.end();
