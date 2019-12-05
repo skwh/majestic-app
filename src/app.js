@@ -39,7 +39,7 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
   const EXPECTED_CANARY_MESSAGE_FORMAT = [
     ['source_device', 'Identification Number'],
     ['datetime', 'Datetime'],
-    ['time', 'time'],
+    ['Time', 'time'],
     ['Lat', 'coordinate'],
     ['Long', 'coordinate'],
     ['Uncertianity', 'none'],
@@ -57,33 +57,23 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
     ['PM102', 'µg/m3']
   ];
 
-  const EXPECTED_QUERY_FIELDS = ['sensorIds', 'startTime', 'endTime', 'fields', 'download'];
-
   const MALFORMED_PARAMETER = (res) => res.status(400).json({
     error: 400,
     reason: 'Malformed Parameter'
   });
-
-  function validate_parameters(res, validation_regexes, parameters) {
-    return utils.zip(validation_regexes, parameters).reduce((prev, pair) => {
-      let [regex, param] = pair;
-      if (!regex.test(param)) prev |= false;
-      return prev;
-    }, true);
-  }
 
   function validate_message(expected_fields, message) {
     return expected_fields.map(i => utils.object_has_key(message, i)).reduce((p, c) => p && c);
   }
 
   function validate_update_message(body) {
-    let { array1 } = utils.unzip(EXPECTED_CANARY_MESSAGE_FORMAT);
-    return validate_message(array1, body);
+    let [ update_message_required_keys, _ ] = utils.unzip(EXPECTED_CANARY_MESSAGE_FORMAT);
+    return validate_message(update_message_required_keys, body);
   }
 
   function validate_query_message(body) {
-    return validate_message(EXPECTED_QUERY_FIELDS, body) 
-        && validate_times(body['startTime'], body['endTime']);
+    return utils.boolean_fold(['startTime', 'endTime'].map(utils.is_not_undefined)) ? 
+                                validate_times(body['startTime'], body['endTime']) : true;
   }
 
   function validate_times(startTime, endTime) {
@@ -177,6 +167,19 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
   const SENSOR_QUERY_SOME_SENSORS = `SELECT sensor_id,canary_message FROM canary_sensor_data WHERE input_timestamp BETWEEN $1 AND $2 AND sensor_id = ANY ($3)`;
   const SENSOR_QUERY_ALL_SENSORS = `SELECT sensor_id,canary_message FROM canary_sensor_data WHERE input_timestamp BETWEEN $1 AND $2`;
 
+  const DEFAULT_QUERY_REQUEST_PARAMETERS = [
+    ['startTime', 0],
+    ['endTime', 0],
+    ['download', false],
+    ['format', 'json'],
+    ['sensorIds', ''],
+    ['fields', [CANARY_MESSAGE_SENSOR_ID_FIELD_NAME, 'Time']]
+  ];
+
+  function fill_default_values(obj, fieldsZip) {
+    fieldsZip.forEach(z => obj[z[0]] = utils.is_not_undefined(obj[z[0]]) ? obj[z[0]] : z[1]); 
+    return obj;
+  }
   /**
    * GET : API/SENSOR
    * Returns data based on the passed parameters.
@@ -205,21 +208,9 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
       return;
     }
     if (parse_boolean(request.download)) {
-      let format = req.accepts('text/csv') ? 'csv' : 'json';
-      res.setHeader('Content-Disposition', `attachment; filename="${build_filename(request.startTime, request.endTime, format)}"`);
+      res.setHeader('Content-Disposition', `attachment; filename="${build_filename(request.startTime, request.endTime, request.format)}"`);
     }
-    if (!utils.contains(request.fields, 'Time')) {
-      request.fields.push('Time');
-    }
-    request.fields.push(CANARY_MESSAGE_SENSOR_ID_FIELD_NAME);
-    const { QUERY, PARAMS } = (() => {
-      const all_sensors = utils.contains(request.sensorIds, '*');
-      const params = [moment(request.startTime).format(), moment(request.endTime).format()];
-      return {
-        QUERY: all_sensors ? SENSOR_QUERY_ALL_SENSORS : SENSOR_QUERY_SOME_SENSORS,
-        PARAMS: all_sensors ? params : (params.concat([request.sensorIds])) // here ':' means 'OR' not 'cons'
-      }
-    })();
+    let { QUERY, PARAMS } = handle_sensor_query(request, SENSOR_QUERY_ALL_SENSORS, SENSOR_QUERY_SOME_SENSORS);
     db.query(QUERY, PARAMS, (error, result) => {
       if (error) {
         next(error);
@@ -232,6 +223,40 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
       }
     })
   });
+
+  function handle_sensor_query(queryParams, ALL_SENSORS_QUERY, SOME_SENSORS_QUERY) {
+    let request = fill_default_values(queryParams, DEFAULT_QUERY_REQUEST_PARAMETERS);
+    if (!utils.contains(request.fields, 'Time')) {
+      request.fields.push('Time');
+    }
+    request.fields.push(CANARY_MESSAGE_SENSOR_ID_FIELD_NAME);
+    const all_sensors = utils.contains(request.sensorIds, '*');
+    const params = [moment(request.startTime).format(), moment(request.endTime).format()];
+    return {
+      QUERY: all_sensors ? ALL_SENSORS_QUERY : SOME_SENSORS_QUERY,
+      PARAMS: all_sensors ? params : (params.concat([request.sensorIds])) // sensorIds must be concat onto the end because it is $3 
+    }
+  }
+
+  const SENSOR_COUNT_QUERY_ALL_SENSORS = `SELECT COUNT(sensor_id) FROM canary_sensor_data WHERE input_timestamp BETWEEN $1 AND $2`;
+  const SENSOR_COUNT_QUERY_SOME_SENSORS = `SELECT COUNT(sensor_id) FROM canary_sensor_data WHERE input_timestamp BETWEEN $1 AND $2 AND sensor_id = ANY ($3)`;
+
+  /**
+   * GET : API/SENSOR/COUNT
+   * Returns the size of a query to API/SENSOR.
+   * Takes the same parameters, but always returns JSON count of the rows returned.
+   */
+  app.get('/api/sensor/count', cors(), express.json(), (req, res, next) => {
+    let request = req.query;
+    let { QUERY, PARAMS } = handle_sensor_query(request, SENSOR_COUNT_QUERY_ALL_SENSORS, SENSOR_COUNT_QUERY_SOME_SENSORS);
+    db.query(QUERY, PARAMS, (error, result) => {
+      if (error) {
+        next(error);
+      } else {
+        res.json({ size: result.rows[0]['count'] });
+      }
+    })
+  })
 
   /**
    * GET : API/SENSOR/FIELDS
@@ -246,10 +271,8 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
     if (parse_boolean(req.query.units)) {
       res.json({ data: EXPECTED_CANARY_MESSAGE_FORMAT });
     } else {
-      let {
-        array1
-      } = utils.unzip(EXPECTED_CANARY_MESSAGE_FORMAT);
-      res.json({ data : array1 });
+      let [ fields, _ ] = utils.unzip(EXPECTED_CANARY_MESSAGE_FORMAT);
+      res.json({ data : fields });
     }
   });
 

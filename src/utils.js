@@ -12,7 +12,7 @@ function unzip(ary_of_2_n_arys) {
     ary1.push(ary_of_2_n_arys[i][0]);
     ary2.push(ary_of_2_n_arys[i][1]);
   }
-  return { array1: ary1, array2: ary2 };
+  return [ary1, ary2];
 }
 
 function ordering(a, b) {
@@ -26,6 +26,19 @@ function ordering(a, b) {
 
 function object_has_key(obj, key) {
   return contains(Object.keys(obj), key);
+}
+
+function default_or_val(a, b) {
+  if (b) return b;
+  return a;
+}
+
+function is_not_undefined(a) {
+  return a != undefined;
+}
+
+function boolean_fold(boolArray) {
+  return boolArray.reduce((p, c) => p && c);
 }
 
 function iterate_on_keys(obj, func) {
@@ -62,6 +75,9 @@ function values_as_array(obj, keys) {
 module.exports = {
   zip: zip,
   unzip: unzip,
+  boolean_fold: boolean_fold,
+  is_not_undefined: is_not_undefined,
+  default_or_val: default_or_val,
   object_has_key: object_has_key,
   iterate_on_keys: iterate_on_keys,
   filter_keys: filter_keys,

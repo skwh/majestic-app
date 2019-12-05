@@ -47,7 +47,9 @@
       </div>
     </fieldset>
     <div class="form-footer-buttons">
-      <button @click="download">Download</button>
+      <span>Query has {{ totalRows }} rows.</span>
+      <button @click="download"
+              :disabled="totalRows < 1">Download</button>
     </div>
   </section>
 </template>
@@ -56,6 +58,7 @@
 import Axios from 'axios';
 import ApiRoutes from '../api';
 import moment from 'moment';
+
 
 export default {
   name: 'Download',
@@ -67,7 +70,8 @@ export default {
       endTime: moment().format('Y-MM-DDThh:mm'),
       format: 'csv',
       selectedSensors: [],
-      selectedInstruments: []
+      selectedInstruments: ['Time', 'source_device'],
+      totalRows: 0,
     }
   },
   methods: {
@@ -94,11 +98,42 @@ export default {
     },
     makeFor(type, name, element) {
       return `${type}-${name}-${element}`;
+    },
+    checkIsDefaultIncluded(instrument_name) {
+      return DEFAULT_INCLUDED_INSTRUMENTS.indexOf(instrument_name) != -1;
+    },
+    checkQueryRowCount() {
+      Axios.get(ApiRoutes.DATA_COUNT_ENDPOINT + ApiRoutes.DOWNLOAD_QUERY(this.startTime,
+                                                                         this.endTime,
+                                                                         this.selectedInstruments,
+                                                                         this.selectedSensors,
+                                                                         this.format))
+           .then(res => {
+             this.totalRows = res.data.size;
+           })
+           .catch(err => {
+             console.log("couldn't determine size of query result set");
+           });
     }
   },
   mounted() {
     this.getSensorNames();
     this.getInstrumentNames();
+    this.checkQueryRowCount();
+  },
+  watch: {
+    startTime() {
+      this.checkQueryRowCount();
+    },
+    endTime() {
+      this.checkQueryRowCount();
+    },
+    selectedSensors() {
+      this.checkQueryRowCount();
+    },
+    selectedInstruments() {
+      this.checkQueryRowCount();
+    }
   }
 }
 </script>
@@ -152,8 +187,9 @@ div.check-list {
 
 div.form-footer-buttons {
   display: flex;
-  justify-content: center;
+  justify-content: space-evenly;
   align-items: center;
+  flex-direction: column;
 
   button {
     width: 50%;
