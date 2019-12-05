@@ -21,6 +21,9 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
 
   const Logger = (req, res, next) => {
     console.log(`${req.ip} -> ${req.protocol} - ${req.method} - ${req.originalUrl}`);
+    res.on('finish', () => {
+      console.log(`  <- ${res.statusCode} ${res.statusMessage}`);
+    })
     next();
   }
   
