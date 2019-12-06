@@ -30,7 +30,7 @@ export default {
     },
     inputSensors: {
       type: Array,
-      default: () => ['*']
+      default: () => []
     },
     instrument: {
       type: String,
@@ -87,12 +87,12 @@ export default {
       });
     },
     hasSensorId( datum ) {
-      return this.sensors[datum.canary_message.sensorID] !== undefined;
+      return this.sensors[datum.canary_message.source_device] !== undefined;
     },
     newSensorId( datum ) {
-      this.sensors[datum.canary_message.sensorID] = datum.sensor_color;
+      this.sensors[datum.canary_message.source_device] = datum.sensor_color;
       this.chartData.datasets.push({
-        label : datum.canary_message.sensorID,
+        label : datum.canary_message.source_device,
         borderColor: datum.sensor_color,
         backgroundColor: 'rgba(0, 0, 0, 0)',
         data: []
@@ -110,7 +110,7 @@ export default {
       let point = canary_message[this.instrument];
       for (let i = 0; i < this.chartData.datasets.length; i++) {
         let current_dataset = this.chartData.datasets[i];
-        if (current_dataset.label === canary_message.sensorID) {
+        if (current_dataset.label === canary_message.source_device) {
           current_dataset.data.push({
             x : canary_message.Time,
             y : point
@@ -123,7 +123,7 @@ export default {
     onRefresh ( chart ) {
       Axios.get(ApiRoutes.REALTIME_ENDPOINT).then((res) => {
         this.parseRealtimeResponse(res);
-      })
+      });
     },
     getRecentData() {
       Axios.get(ApiRoutes.DATA_ENDPOINT + ApiRoutes.RECENT_REALTIME_QUERY(this.startTime.toISOString(), 

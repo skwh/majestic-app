@@ -1,7 +1,6 @@
 import Vue from 'vue';
 import App from './App.vue';
 import router from './router';
-import ApiRoutes from './api';
 
 // Vue.config.productionTip = true;
 
