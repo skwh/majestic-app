@@ -1,3 +1,5 @@
+const moment = require('moment');
+
 function zip(ary1, ary2) {
   let pairs = [];
   for (let i = 0; i < ary1.length; i++) {
@@ -18,6 +20,10 @@ function unzip(ary_of_2_n_arys) {
 
 function object_has_key(obj, key) {
   return contains(Object.keys(obj), key);
+}
+
+function object_has_keys(obj, keys) {
+  return boolean_fold(keys.map(i => object_has_key(obj, i)));
 }
 
 function boolean_fold(boolArray) {
@@ -47,6 +53,23 @@ function filter_keys(obj, keep_keys) {
   return val;
 }
 
+function build_filename(startTime, endTime, format) {
+  return `du-sensor-data-${moment(startTime).format('Y-MM-DD')}--${moment(endTime).format('Y-MM-DD')}.${format}`;
+}
+
+function before(a, b) {
+  return moment(a).isBefore(b);
+}
+
+// parsing bool from string is probably the messiest thing i have ever seen
+function parse_boolean(str) {
+  if (str === undefined) return false;
+  switch(str.toLowerCase()) {
+    case 'true': case 't': case '1': return true;
+    default: return false;
+  }
+}
+
 function contains(ary, val) {
   return ary.indexOf(val) != -1;
 }
@@ -55,13 +78,33 @@ function values_as_array(obj, keys) {
   return keys.map(k => obj[k]);
 }
 
+function convert_to_csv(values) {
+  let val = "";
+  if (values.length < 1)
+    return "Zero rows returned";
+  val += Object.keys(values[0]).join() + "\n";
+  val += values.reduce((acc, v) => acc += utils.values_as_array(v, Object.keys(v)).join() + "\n", "");
+  return val;
+}
+
+function fill_default_values(obj, fieldsZip) {
+  fieldsZip.forEach(z => obj[z[0]] = obj[z[0]] === undefined ? obj[z[0]] : z[1]); 
+  return obj;
+}
+
 module.exports = {
-  zip: zip,
-  unzip: unzip,
+  before: before,
   boolean_fold: boolean_fold,
-  object_has_key: object_has_key,
-  iterate_on_keys: iterate_on_keys,
-  filter_keys: filter_keys,
+  build_filename: build_filename,
   contains: contains,
-  values_as_array: values_as_array
+  convert_to_csv: convert_to_csv,
+  fill_default_values: fill_default_values,
+  filter_keys: filter_keys,
+  iterate_on_keys: iterate_on_keys,
+  object_has_key: object_has_key,
+  object_has_keys: object_has_keys,
+  parse_boolean: parse_boolean,
+  unzip: unzip,
+  values_as_array: values_as_array,
+  zip: zip,
 }

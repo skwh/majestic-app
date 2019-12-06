@@ -7,6 +7,7 @@ const express = require('express');
 const cors = require('cors');
 const moment = require('moment');
 const helmet = require('helmet');
+
 const https = require('https');
 const http = require('http');
 
@@ -67,12 +68,7 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
   });
 
   function validate_message(expected_fields, message) {
-    // return utils.boolean_fold(expected_fields.map(i => utils.object_has_key(message, i)));
-    return utils.boolean_fold(expected_fields.map(i => {
-      let val = utils.object_has_key(message, i);
-      if (!val) console.info("validate_message: message is missing expected field", i);
-      return val;
-    }))
+    return utils.object_has_keys(message, expected_fields);
   }
 
   function validate_update_message(body) {
@@ -81,34 +77,16 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
   }
 
   function validate_query_message(body) {
-    return utils.boolean_fold(['startTime', 'endTime'].map(i => i !== undefined)) ? 
-                                validate_times(body['startTime'], body['endTime']) : true;
+    if (validate_message(['startTime', 'endTime'], body)) {
+      return validate_times(body);
+    }
+    // Because the query message is filled with default values,
+    // there are no missing fields and it is automatically valid
+    return true;
   }
 
   function validate_times(startTime, endTime) {
-    return moment(startTime).isBefore(endTime);
-  }
-
-  function build_filename(startTime, endTime, format) {
-    return `du-sensor-data-${moment(startTime).format('Y-MM-DD')}--${moment(endTime).format('Y-MM-DD')}.${format}`;
-  }
-
-  // parsing bool from string is probably the messiest thing i have ever seen
-  function parse_boolean(str) {
-    if (str === undefined) return false;
-    switch(str.toLowerCase()) {
-      case 'true': case 't': case '1': return true;
-      default: return false;
-    }
-  }
-
-  function convert_to_csv(values) {
-    let val = "";
-    if (values.length < 1)
-      return "Zero rows returned";
-    val += Object.keys(values[0]).join() + "\n";
-    val += values.reduce((acc, v) => acc += utils.values_as_array(v, Object.keys(v)).join() + "\n", "");
-    return val;
+    return utils.before(startTime, endTime);
   }
 
   const CANARY_MESSAGE_SENSOR_ID_FIELD_NAME = 'source_device';
@@ -185,10 +163,6 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
     ['fields', [CANARY_MESSAGE_SENSOR_ID_FIELD_NAME, 'Time']]
   ];
 
-  function fill_default_values(obj, fieldsZip) {
-    fieldsZip.forEach(z => obj[z[0]] = obj[z[0]] === undefined ? obj[z[0]] : z[1]); 
-    return obj;
-  }
   /**
    * GET : API/SENSOR
    * Returns data based on the passed parameters.
@@ -216,7 +190,7 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
       MALFORMED_PARAMETER(res);
       return;
     }
-    if (parse_boolean(request.download)) {
+    if (utils.parse_boolean(request.download)) {
       res.setHeader('Content-Disposition', `attachment; filename="${build_filename(request.startTime, request.endTime, request.format)}"`);
     }
     let { QUERY, PARAMS } = handle_sensor_query(request, SENSOR_QUERY_ALL_SENSORS, SENSOR_QUERY_SOME_SENSORS);
@@ -226,7 +200,7 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
       } else {
         let rows = result.rows.map(v => { v.canary_message = utils.filter_keys(v['canary_message'], request.fields); return v; });
         if (request.format === 'csv')
-          res.send(convert_to_csv(rows.map(v => v['canary_message'])));
+          res.send(utils.convert_to_csv(rows.map(v => v['canary_message'])));
         else
           res.json({ size: rows.length, data: rows });
       }
@@ -234,7 +208,7 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
   });
 
   function handle_sensor_query(queryParams, ALL_SENSORS_QUERY, SOME_SENSORS_QUERY) {
-    let request = fill_default_values(queryParams, DEFAULT_QUERY_REQUEST_PARAMETERS);
+    let request = utils.fill_default_values(queryParams, DEFAULT_QUERY_REQUEST_PARAMETERS);
     const all_sensors = utils.contains(request.sensorIds, '*') || request.sensorIds.length === 0;
     const params = [moment(request.startTime).format(), moment(request.endTime).format()];
     return {
@@ -273,7 +247,7 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
    * Response type: json
    */
   app.get('/api/sensor/fields', cors(), (req, res, next) => {
-    if (parse_boolean(req.query.units)) {
+    if (utils.parse_boolean(req.query.units)) {
       res.json({ data: EXPECTED_CANARY_MESSAGE_FORMAT });
     } else {
       let [ fields, _ ] = utils.unzip(EXPECTED_CANARY_MESSAGE_FORMAT);

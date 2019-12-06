@@ -12,7 +12,7 @@ const cors = require('cors');
 // Mocked Database
 const db = function(error, result) {
   return { 
-    query: (_, _, callback) => callback(error, result) 
+    query: (_, __, callback) => callback(error, result) 
   };
 }
 const utils = require('../../src/utils');
