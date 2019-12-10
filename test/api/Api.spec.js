@@ -43,10 +43,8 @@ const db = function(error, result) {
     }
   };
 }
-const utils = require('../../src/utils');
-
 // These tests do not consider database errors, so passing in a mocked database error is always irrelevant.
-const appBuilder = (result) => require('../../src/app')(express, cors, moment, helmet, db(undefined, result), utils);
+const appBuilder = (result) => require('../../src/app')(express, cors, moment, helmet, db(undefined, result));
 
 const startTime = '1970-01-01T12:00:00Z';
 const endTime = '1970-02-01T12:00:00Z';

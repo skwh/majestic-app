@@ -1,8 +1,10 @@
+const utils = require('./utils');
+
 /**
  * Encapsulating the app code in a function allows for 
  * dependency injection, making testing easier.
  */
-function CreateApp(express, cors, moment, helmet, db, utils) {
+function CreateApp(express, cors, moment, helmet, db) {
   const app = express();
 
   let VIEW_PATH = '/view';

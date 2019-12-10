@@ -1,5 +1,7 @@
 #!/bin/bash
 
+nvm use
+
 echo "Cleaning dist....."
 rm -rf ./dist/
 mkdir dist
