@@ -1,6 +1,6 @@
 require('dotenv').config({ path: __dirname + '/config/.web.env'});
 
-const app = require('./app');
+const CreateApp = require('./app');
 const db = require('./db');
 const utils = require('./utils');
 
