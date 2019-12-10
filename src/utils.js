@@ -10,7 +10,7 @@ function zip(ary1, ary2) {
 
 function unzip(ary_of_2_n_arys) {
   let ary1 = [], ary2 = [];
-  for (let i=0; i < ary_of_2_n_arys.length; i++) {
+  for (let i = 0; i < ary_of_2_n_arys.length; i++) {
     if (ary_of_2_n_arys[i].length != 2) continue;
     ary1.push(ary_of_2_n_arys[i][0]);
     ary2.push(ary_of_2_n_arys[i][1]);
@@ -83,12 +83,12 @@ function convert_to_csv(values) {
   if (values.length < 1)
     return "Zero rows returned";
   val += Object.keys(values[0]).join() + "\n";
-  val += values.reduce((acc, v) => acc += utils.values_as_array(v, Object.keys(v)).join() + "\n", "");
+  val += values.reduce((acc, v) => acc += values_as_array(v, Object.keys(v)).join() + "\n", "");
   return val;
 }
 
 function fill_default_values(obj, fieldsZip) {
-  fieldsZip.forEach(z => obj[z[0]] = obj[z[0]] === undefined ? obj[z[0]] : z[1]); 
+  fieldsZip.forEach(z => obj[z[0]] = object_has_key(obj, z[0]) ? obj[z[0]] : z[1]); 
   return obj;
 }
 

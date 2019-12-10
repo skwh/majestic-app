@@ -7,11 +7,12 @@
   "scripts": {
     "build:dev": "./build/build.sh false",
     "build:prod": "./build/build.sh true",
-    "docker-node-dev": "npm run build:dev && nodemon src/app.js",
-    "node-dev": "nodemon src/app.js",
-    "serve": "npm run build:prod && node dist/app.js",
+    "docker-node-dev": "npm run build:dev && nodemon src/server.js",
+    "node-dev": "nodemon src/server.js",
+    "serve": "npm run build:prod && node dist/server.js",
     "test": "npm run test:api && npm run test:vue",
     "test:api": "mocha test/api/ --color --exit --file test/api/setup.js",
+    "test:api:watch": "mocha test/api/ --color --file test/api/setup.js --watch",
     "test:vue": "mocha-webpack --webpack-config webpack.config.js --require test/view/setup.js --exit test/view/**/*.spec.js",
     "test:vue:watch": "mocha-webpack --watch --webpack-config webpack.config.js --require test/view/setup.js test/view/**/*.spec.js",
     "vue-dev": "webpack-dev-server --env.production=false --watch"
@@ -47,6 +48,7 @@
     "canvas": "^2.6.0",
     "chai": "^4.2.0",
     "chai-http": "^4.3.0",
+    "chai-spies": "^1.0.0",
     "clean-webpack-plugin": "^3.0.0",
     "css-loader": "^3.2.0",
     "expect": "^24.9.0",

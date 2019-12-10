@@ -1,16 +1,3 @@
-require('dotenv').config({ path: __dirname + '/config/.web.env'});
-
-const db = require('./db');
-const utils = require('./utils');
-
-const express = require('express');
-const cors = require('cors');
-const moment = require('moment');
-const helmet = require('helmet');
-
-const https = require('https');
-const http = require('http');
-
 /**
  * Encapsulating the app code in a function allows for 
  * dependency injection, making testing easier.
@@ -33,8 +20,10 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
     console.log(VIEW_PATH);
   }
 
-  app.use(helmet());
-  app.use(Logger);
+  if (process.env.NODE_ENV !== 'test') {
+    app.use(helmet());
+    app.use(Logger);
+  }
   app.use(express.static(__dirname + VIEW_PATH));
 
   /**
@@ -78,9 +67,9 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
 
   function validate_query_message(body) {
     if (validate_message(['startTime', 'endTime'], body)) {
-      return validate_times(body);
+      return validate_times(body['startTime'], body['endTime']);
     }
-    // Because the query message is filled with default values,
+    // Because the query message is later filled with default values,
     // there are no missing fields and it is automatically valid
     return true;
   }
@@ -198,11 +187,12 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
       if (error) {
         next(error);
       } else {
-        let rows = result.rows.map(v => { v.canary_message = utils.filter_keys(v['canary_message'], request.fields); return v; });
-        if (request.format === 'csv')
-          res.send(utils.convert_to_csv(rows.map(v => v['canary_message'])));
-        else
-          res.json({ size: rows.length, data: rows });
+        result.rows.map(v => utils.filter_keys(v.canary_message, request.fields));
+        if (request.format === 'csv') {
+          res.send(utils.convert_to_csv(result.rows.map(v => v.canary_message)));
+        } else {
+          res.json({ size: result.rows.length, data: result.rows });
+        }
       }
     })
   });
@@ -213,7 +203,7 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
     const params = [moment(request.startTime).format(), moment(request.endTime).format()];
     return {
       QUERY: all_sensors ? ALL_SENSORS_QUERY : SOME_SENSORS_QUERY,
-      PARAMS: all_sensors ? params : (params.concat([request.sensorIds])) // sensorIds must be concat onto the end because it is $3 
+      PARAMS: all_sensors ? params : (params.concat([request.sensorIds])) // sensorIds must be concat onto the end because it is the third argument, $3 
     }
   }
 
@@ -234,7 +224,7 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
       } else {
         res.json({ size: result.rows[0]['count'] });
       }
-    })
+    });
   })
 
   /**
@@ -280,27 +270,8 @@ function CreateApp(express, cors, moment, helmet, db, utils) {
     res.status(500).send('500 Internal Server Error');
   });
 
-
   return app;
 }
 
-const app = CreateApp(express, cors, moment, helmet, db, utils);
-
-const httpServer = http.createServer(app);
-httpServer.listen(process.env.SERVE_PORT || 8000, () => console.log('Server online.'));
-
-if (process.env.SERVE_HTTPS) {
-  const privateKey = 'false'; // Replace with fs readFileSync and cert location
-  const certificate = 'false';
-  
-  const HTTPS_CREDENTIALS = {
-    key: 'false',
-    cert: 'false'
-  };
-
-  const httpsServer = https.createServer(HTTPS_CREDENTIALS, app);
-  
-  httpsServer.listen(process.env.HTTPS_SERVE_PORT || 8443, () => console.log('HTTPS Server online.'));
-}
 
 module.exports = CreateApp;
