@@ -11,6 +11,13 @@ const moment = require('moment');
 const helmet = () => undefined;
 const cors = require('cors');
 
+//Polyfill method
+Object.prototype.fromEntries = function(zippedArray) {
+  let obj = {};
+  zippedArray.forEach(e => obj[e[0]] = e[1]);
+  return obj;
+}
+
 // api dependency from view helps us build queries
 const queryArrayBuilder = (array, key) => array.map(i => `&${key}[]=${i}`).join('');
 const queryBuilder = (startTime, endTime, fields, sensors, format, download) => {
@@ -152,7 +159,6 @@ describe('majestic-app API', () => {
     });
 
     it('should accept an update with the correct parameters', (done) => {
-      // Make sure you are running Node v12 or higher for this line to work.
       let correct_update_body = Object.fromEntries(updateExpectedFields);
       chai.request(app)
         .put('/api/sensor/update')
