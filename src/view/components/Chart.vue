@@ -97,6 +97,7 @@ export default {
         backgroundColor: 'rgba(0, 0, 0, 0)',
         data: []
       });
+      this.$data._chart.update();
     },
     parseRecentResponse( response ) {
       let data = response.data.data;

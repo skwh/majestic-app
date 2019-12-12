@@ -140,7 +140,7 @@ export default {
 
 <style lang="scss" scoped>
 section {
-  padding: 0vh 10vw;
+  padding: 0vh 5vw;
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 3fr 1fr 1fr;

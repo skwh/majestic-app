@@ -4,8 +4,9 @@ services:
   web:
     image: derbyevan/majestic-app_web:stable
     env_file: ./config/.web.env
-    environment:
-      - SERVE_HTTPS=1
+    # environment:
+      # HTTPS disabled until cert can be acquired
+      # - SERVE_HTTPS=1
     restart: on-failure
     depends_on:
       - db

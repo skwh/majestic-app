@@ -13,7 +13,7 @@ function CreateApp(express, cors, moment, helmet, db) {
     console.log(`${req.ip} -> ${req.protocol} - ${req.method} - ${req.originalUrl}`);
     res.on('finish', () => {
       console.log(`${req.ip} <- ${res.statusCode} ${res.statusMessage}`);
-    })
+    });
     next();
   }
   
@@ -113,7 +113,7 @@ function CreateApp(express, cors, moment, helmet, db) {
       } else {
         res.sendStatus(200);
       }
-    })
+    });
   });
 
   /**
@@ -170,7 +170,7 @@ function CreateApp(express, cors, moment, helmet, db) {
    * data : [
    *  {
    *    Time: number, !! Time is automatically included, even if not specified in fields
-   *    sensorId: string,
+   *    sensorId: string, !! Sensor ID is automaticall included
    *    (... other requested fields)
    *  }
    * ]
@@ -182,21 +182,23 @@ function CreateApp(express, cors, moment, helmet, db) {
       return;
     }
     if (utils.parse_boolean(request.download)) {
-      res.setHeader('Content-Disposition', `attachment; filename="${build_filename(request.startTime, request.endTime, request.format)}"`);
+      res.setHeader('Content-Disposition', `attachment; filename="${utils.build_filename(request.startTime, request.endTime, request.format)}"`);
     }
     let { QUERY, PARAMS } = handle_sensor_query(request, SENSOR_QUERY_ALL_SENSORS, SENSOR_QUERY_SOME_SENSORS);
     db.query(QUERY, PARAMS, (error, result) => {
       if (error) {
         next(error);
       } else {
+        request.fields.push(CANARY_MESSAGE_SENSOR_ID_FIELD_NAME, 'Time');
         result.rows.map(v => utils.filter_keys(v.canary_message, request.fields));
         if (request.format === 'csv') {
+          res.set('Content-Type', 'text/csv');
           res.send(utils.convert_to_csv(result.rows.map(v => v.canary_message)));
         } else {
           res.json({ size: result.rows.length, data: result.rows });
         }
       }
-    })
+    });
   });
 
   function handle_sensor_query(queryParams, ALL_SENSORS_QUERY, SOME_SENSORS_QUERY) {

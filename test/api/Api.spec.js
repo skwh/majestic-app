@@ -12,14 +12,14 @@ const helmet = () => undefined;
 const cors = require('cors');
 
 // api dependency from view helps us build queries
-const queryArrayBuilder = (array, key) => array.map(i => `&${key}[]=${i}`).join(''); 
+const queryArrayBuilder = (array, key) => array.map(i => `&${key}[]=${i}`).join('');
 const queryBuilder = (startTime, endTime, fields, sensors, format, download) => {
   return `?startTime=${startTime}&endTime=${endTime}&format=${format}&download=${download}${queryArrayBuilder(fields, 'fields')}${queryArrayBuilder(sensors, 'sensorIds')}`;
 }
 
 // Mocked Database
-const db = function(error, result) {
-  return { 
+const db = function (error, result) {
+  return {
     /**
      * node-postgres db.query takes 2-3 arguments. 
      * To mock this, we have to consider these cases:
@@ -72,43 +72,51 @@ const updateExpectedFields = [
 describe('majestic-app API', () => {
   describe('GET /api/sensor/recent', () => {
     it('should return empty if the database is empty', (done) => {
-      let app = appBuilder({ rows: [] });
-      let expected_value = { data: [], size: 0 };
+      let app = appBuilder({
+        rows: []
+      });
+      let expected_value = {
+        data: [],
+        size: 0
+      };
       chai.request(app)
-          .get('/api/sensor/recent')
-          .end((err, res) => {
-            assert.isNull(err);
-            assert.equal(res.status, 200);
-            assert.equal(res.type, 'application/json');
-            assert.deepEqual(res.body, expected_value);
+        .get('/api/sensor/recent')
+        .end((err, res) => {
+          assert.isNull(err);
+          assert.equal(res.status, 200);
+          assert.equal(res.type, 'application/json');
+          assert.deepEqual(res.body, expected_value);
 
-            done();
-          });
+          done();
+        });
     });
 
     it('should only return one row for each sensor', (done) => {
-      let app = appBuilder({ 
-        rows: [
-          { 
-            'sensor_id' : 'sensor-1',
-            'canary_message': { 'test' : 1 }
+      let app = appBuilder({
+        rows: [{
+            'sensor_id': 'sensor-1',
+            'canary_message': {
+              'test': 1
+            }
           },
-          { 
-            'sensor_id' : 'sensor-2',
-            'canary_message': { 'test' : 2 }
+          {
+            'sensor_id': 'sensor-2',
+            'canary_message': {
+              'test': 2
+            }
           }
         ]
       });
       chai.request(app)
-          .get('/api/sensor/recent')
-          .end((err, res) => {
-            assert.isNull(err);
-            assert.equal(res.status, 200);
-            assert.equal(res.type, 'application/json');
-            assert.equal(res.body['size'], 2);
+        .get('/api/sensor/recent')
+        .end((err, res) => {
+          assert.isNull(err);
+          assert.equal(res.status, 200);
+          assert.equal(res.type, 'application/json');
+          assert.equal(res.body['size'], 2);
 
-            done();
-          });
+          done();
+        });
     });
     // Because this is something that is handled through a trigger on the database,
     // it can't really be tested here, so this test is out
@@ -126,35 +134,35 @@ describe('majestic-app API', () => {
 
     it('should reject an update without all the correct parameters', (done) => {
       let incorrect_update_body = {
-        'source_device' : 'sensor-1',
-        'missing-other' : 'parameters'
+        'source_device': 'sensor-1',
+        'missing-other': 'parameters'
       };
       chai.request(app)
-          .put('/api/sensor/update')
-          .send(incorrect_update_body)
-          .end((err, res) => {
-            assert.isNull(err);
-            assert.equal(res.status, 400);
-            assert.equal(res.body.error, 400);
-            assert.equal(res.body.reason, "Malformed Parameter");
-            console.log(spy);
+        .put('/api/sensor/update')
+        .send(incorrect_update_body)
+        .end((err, res) => {
+          assert.isNull(err);
+          assert.equal(res.status, 400);
+          assert.equal(res.body.error, 400);
+          assert.equal(res.body.reason, "Malformed Parameter");
+          console.log(spy);
 
-            done();
-          });
+          done();
+        });
     });
 
     it('should accept an update with the correct parameters', (done) => {
       // Make sure you are running Node v12 or higher for this line to work.
       let correct_update_body = Object.fromEntries(updateExpectedFields);
       chai.request(app)
-          .put('/api/sensor/update')
-          .send(correct_update_body)
-          .end((err, res) => {
-            assert.isNull(err);
-            assert.equal(res.status, 200);
+        .put('/api/sensor/update')
+        .send(correct_update_body)
+        .end((err, res) => {
+          assert.isNull(err);
+          assert.equal(res.status, 200);
 
-            done();
-          });
+          done();
+        });
     });
   });
 
@@ -163,92 +171,156 @@ describe('majestic-app API', () => {
 
     beforeEach(() => {
       app = appBuilder({
-        rows: [
-          { 
-            'sensor_id' : 'sensor-1',
-            'canary_message' : { 'test' : 1, 'test-2' : 3 },
+        rows: [{
+            'sensor_id': 'sensor-1',
+            'canary_message': {
+              'test': 1,
+              'test-2': 3,
+              'Time': 'time',
+              'source_device': 'sensor-1'
+            },
           },
-          { 
-            'sensor_id' : 'sensor-2',
-            'canary_message' : { 'test' : 2, 'test-2' : 4 },
+          {
+            'sensor_id': 'sensor-2',
+            'canary_message': {
+              'test': 2,
+              'test-2': 4,
+              'Time': 'time',
+              'source_device': 'sensor-2'
+            },
           }
         ]
       });
     });
 
-    it('should accept a query without all the query parameters', (done) => {
-      const query = queryBuilder(startTime, endTime, ['test'], [], 'json', 'false');
+    it('should always return the Time and source_device fields in an applicable query', (done) => {
+      const query = queryBuilder(startTime, endTime, ['test'], ['*'], 'json', false);
       chai.request(app)
           .get('/api/sensor' + query)
           .end((err, res) => {
             assert.isNull(err);
             assert.equal(res.status, 200);
             assert.equal(res.type, 'application/json');
-            assert.equal(res.body['size'], 2);
+
+            assert.isDefined(res.body.data[0]['canary_message']['Time']);
+            assert.isDefined(res.body.data[0]['canary_message']['source_device']);
 
             done();
           });
+    });
+
+    it('should accept a query without all the query parameters', (done) => {
+      const query = queryBuilder(startTime, endTime, ['test'], [], 'json', 'false');
+      chai.request(app)
+        .get('/api/sensor' + query)
+        .end((err, res) => {
+          assert.isNull(err);
+          assert.equal(res.status, 200);
+          assert.equal(res.type, 'application/json');
+          assert.equal(res.body['size'], 2);
+
+          // The 'Time' and 'source_device' fields should ALWAYS be defined
+          assert.isDefined(res.body.data[0]['canary_message']['Time']);
+          assert.isDefined(res.body.data[0]['canary_message']['source_device']);
+
+          done();
+        });
     });
     it('should reject a query with mixed up dates', (done) => {
       const query = queryBuilder(endTime, startTime, ['test'], ['*'], 'json', 'false');
       chai.request(app)
-          .get('/api/sensor' + query)
-          .end((err, res) => {
-            assert.isNull(err);
-            assert.equal(res.status, 400);
-            assert.equal(res.type, 'application/json');
-            assert.equal(res.body['reason'], "Malformed Parameter");
+        .get('/api/sensor' + query)
+        .end((err, res) => {
+          assert.isNull(err);
+          assert.equal(res.status, 400);
+          assert.equal(res.type, 'application/json');
+          assert.equal(res.body['reason'], "Malformed Parameter");
 
-            done();
-          });
+          done();
+        });
     });
     it('should accept multiple sensor values', (done) => {
       const query = queryBuilder(startTime, endTime, ['test'], ['sensor-1', 'sensor-2'], 'json', 'false');
       chai.request(app)
-          .get('/api/sensor' + query)
-          .end((err, res) => {
-            assert.isNull(err);
-            assert.equal(res.status, 200);
-            assert.equal(res.type, 'application/json');
-            assert.equal(res.body['size'], 2);
-            assert.isUndefined(res.body.data[0]['canary_message']['test-2']);
+        .get('/api/sensor' + query)
+        .end((err, res) => {
+          assert.isNull(err);
+          assert.equal(res.status, 200);
+          assert.equal(res.type, 'application/json');
+          assert.equal(res.body['size'], 2);
+          assert.isUndefined(res.body.data[0]['canary_message']['test-2']);
 
-            done();
-          });
+          assert.isDefined(res.body.data[0]['canary_message']['Time']);
+          assert.isDefined(res.body.data[0]['canary_message']['source_device']);
+
+          done();
+        });
     });
     it('should accept multiple field values', (done) => {
-      const query = queryBuilder(startTime, endTime, ['test', 'test-2'], ['sensor-1'], 'json', false);
+      const query = queryBuilder(startTime, endTime, ['test', 'test-2'], ['sensor-1'], 'json', 'false');
       chai.request(app)
-          .get('/api/sensor' + query)
-          .end((err, res) => {
-            assert.isNull(err);
-            assert.equal(res.status, 200);
-            assert.equal(res.type, 'application/json');
-            assert.isDefined(res.body.data[0]['canary_message']['test-2']);
+        .get('/api/sensor' + query)
+        .end((err, res) => {
+          assert.isNull(err);
+          assert.equal(res.status, 200);
+          assert.equal(res.type, 'application/json');
+          assert.isDefined(res.body.data[0]['canary_message']['test-2']);
 
-            done();
-          });
+          assert.isDefined(res.body.data[0]['canary_message']['Time']);
+          assert.isDefined(res.body.data[0]['canary_message']['source_device']);
+
+          done();
+        });
+    });
+    it('should correctly create data for download if requested', (done) => {
+      const query = queryBuilder(startTime, endTime, ['test'], ['sensor-1'], 'json', 'true');
+      chai.request(app)
+        .get('/api/sensor' + query)
+        .end((err, res) => {
+          assert.isNull(err);
+          assert.equal(res.status, 200);
+          assert.equal(res.type, 'application/json');
+          assert.include(res.header['content-disposition'], 'attachment');
+
+          assert.isDefined(res.body.data[0]['canary_message']['Time']);
+          assert.isDefined(res.body.data[0]['canary_message']['source_device']);
+
+          done();
+        });
+    });
+    it('should respond with csv if requested', (done) => {
+      const query = queryBuilder(startTime, endTime, ['test'], ['sensor-1'], 'csv', 'true');
+      chai.request(app)
+        .get('/api/sensor' + query)
+        .end((err, res) => {
+          assert.isNull(err);
+          assert.equal(res.status, 200);
+          assert.equal(res.type, 'text/csv');
+          assert.include(res.header['content-disposition'], 'attachment');
+
+          done();
+        });
     });
   });
 
   describe('GET /api/sensor/count', () => {
     it('should correctly match the number of rows based on the given parameters', (done) => {
       const app = appBuilder({
-        rows: [
-          { 'count': 1 }
-        ]
+        rows: [{
+          'count': 1
+        }]
       });
       const query = queryBuilder(startTime, endTime, ['test'], ['sensor-1'], 'json', 'false');
       chai.request(app)
-          .get('/api/sensor/count' + query)
-          .end((err, res) => {
-            assert.isNull(err);
-            assert.equal(res.status, 200);
-            assert.equal(res.type, 'application/json');
-            assert.equal(res.body['size'], 1);
+        .get('/api/sensor/count' + query)
+        .end((err, res) => {
+          assert.isNull(err);
+          assert.equal(res.status, 200);
+          assert.equal(res.type, 'application/json');
+          assert.equal(res.body['size'], 1);
 
-            done();
-          });
+          done();
+        });
     });
   })
 
@@ -278,65 +350,72 @@ describe('majestic-app API', () => {
         'F4'
       ];
       chai.request(app)
-          .get('/api/sensor/fields')
-          .end((err, res) => {
-            assert.isNull(err);
-            assert.equal(res.status, 200);
-            assert.equal(res.type, 'application/json');
-            assert.sameMembers(res.body.data, expected_value);
+        .get('/api/sensor/fields')
+        .end((err, res) => {
+          assert.isNull(err);
+          assert.equal(res.status, 200);
+          assert.equal(res.type, 'application/json');
+          assert.sameMembers(res.body.data, expected_value);
 
-            done();
-          });
+          done();
+        });
     });
 
     it('should also return a list of units if requested', (done) => {
       chai.request(app)
-          .get('/api/sensor/fields?units=true')
-          .end((err, res) => {
-            assert.isNull(err);
-            assert.equal(res.status, 200);
-            assert.equal(res.type, 'application/json');
-            assert.sameDeepMembers(res.body.data, updateExpectedFields);
+        .get('/api/sensor/fields?units=true')
+        .end((err, res) => {
+          assert.isNull(err);
+          assert.equal(res.status, 200);
+          assert.equal(res.type, 'application/json');
+          assert.sameDeepMembers(res.body.data, updateExpectedFields);
 
-            done();
-          });
+          done();
+        });
     });
   });
 
   describe('GET /api/sensor/sensors', () => {
     it('should return a list of sensor_ids and their colors', (done) => {
-      let expected_value = [
-        { sensor_id : 'sensor-1', color: '#FFFFFF' },
-        { sensor_id : 'sensor-2', color: '#000000' }
+      let expected_value = [{
+          sensor_id: 'sensor-1',
+          color: '#FFFFFF'
+        },
+        {
+          sensor_id: 'sensor-2',
+          color: '#000000'
+        }
       ];
       let app = appBuilder({
         rows: expected_value
       });
 
       chai.request(app)
-          .get('/api/sensor/sensors')
-          .end((err, res) => {
-            assert.isNull(err);
-            assert.equal(res.status, 200);
-            assert.equal(res.type, 'application/json');
-            assert.deepEqual(res.body.data, expected_value);
+        .get('/api/sensor/sensors')
+        .end((err, res) => {
+          assert.isNull(err);
+          assert.equal(res.status, 200);
+          assert.equal(res.type, 'application/json');
+          assert.deepEqual(res.body.data, expected_value);
 
-            done();
-          });
+          done();
+        });
     });
     it('should return empty if the database is empty', (done) => {
-      let app = appBuilder({ rows: [] });
-      
-      chai.request(app)
-          .get('/api/sensor/sensors')
-          .end((err, res) => {
-            assert.isNull(err);
-            assert.equal(res.status, 200);
-            assert.equal(res.type, 'application/json');
-            assert.equal(res.body.data.length, 0);
+      let app = appBuilder({
+        rows: []
+      });
 
-            done();
-          })
+      chai.request(app)
+        .get('/api/sensor/sensors')
+        .end((err, res) => {
+          assert.isNull(err);
+          assert.equal(res.status, 200);
+          assert.equal(res.type, 'application/json');
+          assert.equal(res.body.data.length, 0);
+
+          done();
+        })
     });
   })
 })
