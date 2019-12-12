@@ -1,13 +1,13 @@
 {
   "name": "majestic-app",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "description": "Web application for Dr. Brian Majestic of the University of Denver Chemistry Department.",
   "private": true,
   "main": "app.js",
   "scripts": {
     "build:dev": "./build/build.sh false",
     "build:prod": "./build/build.sh true",
-    "docker-node-dev": "npm run build:dev && nodemon src/server.js",
+    "docker-node-dev": "npm run build:dev && npm run node-dev",
     "node-dev": "nodemon src/server.js",
     "serve": "npm run build:prod && node dist/server.js",
     "test": "npm run test:api && npm run test:vue",
