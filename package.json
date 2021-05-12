@@ -29,7 +29,7 @@
   "homepage": "https://github.com/skwh/majestic-app#readme",
   "dependencies": {
     "axios": "^0.19.0",
-    "chart.js": "^2.8.0",
+    "chart.js": "^2.9.4",
     "chartjs-plugin-streaming": "^1.8.0",
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
