@@ -60,7 +60,7 @@
     "mocha": "^5.0.0",
     "mocha-webpack": "^2.0.0-beta.0",
     "moment-locales-webpack-plugin": "^1.1.0",
-    "node-sass": "^4.12.0",
+    "node-sass": "^7.0.0",
     "nodemon": "^1.19.4",
     "null-loader": "^3.0.0",
     "sass": "^1.23.0",
